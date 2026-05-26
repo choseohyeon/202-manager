@@ -488,7 +488,8 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 /* ── Nav link ───────────────────────────── */
 
 .nav-link {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
 }
