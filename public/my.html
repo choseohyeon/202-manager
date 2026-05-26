@@ -109,6 +109,7 @@
               const isCurrent = w.week === weeks[weeks.length - 1]?.week;
               return `<th style="min-width:80px${isCurrent ? ';color:var(--primary)' : ''}">${w.label}${isCurrent ? '<br><span style="font-size:10px;font-weight:500">이번 주</span>' : ''}</th>`;
             }).join('')}
+            <th style="min-width:70px">누적 미달</th>
           </tr>
         </thead>`;
 
@@ -126,12 +127,15 @@
             return `<td><div class="cell-inner"><span class="cell-count">${ws.count}일</span><span class="cell-badge" style="background:${bg};color:${color}">${label}</span></div></td>`;
           }).join('');
 
+          const unrecColor = member.unrecognizedCount >= 4 ? 'var(--danger)' : member.unrecognizedCount >= 3 ? 'var(--warning)' : 'var(--text)';
+
           return `<tr>
             <td class="sticky">
               <div class="member-name-cell">${member.name}</div>
               <div class="member-seat-cell">${member.seat_number}번 자리</div>
             </td>
             ${weekCells}
+            <td style="text-align:center;font-weight:800;font-size:16px;color:${unrecColor}">${member.unrecognizedCount}</td>
           </tr>`;
         }).join('')}</tbody>`;
 
