@@ -335,11 +335,15 @@
         }
 
 
+        const currentWeekStr = stats[0]?.weekStats?.find(w => w.isCurrentWeek)?.week;
         const thead = `
           <thead>
             <tr>
               <th class="sticky" style="min-width:130px">사용자</th>
-              ${weeks.map(w => `<th style="min-width:90px">${w.label}</th>`).join('')}
+              ${weeks.map(w => {
+                const isCurrent = w.week === currentWeekStr;
+                return `<th style="min-width:90px${isCurrent ? ';color:var(--primary)' : ''}">${w.label}${isCurrent ? '<br><span style="font-size:10px;font-weight:500">이번 주</span>' : ''}</th>`;
+              }).join('')}
               <th style="min-width:80px">누적 미달</th>
             </tr>
           </thead>
