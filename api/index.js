@@ -168,6 +168,11 @@ app.get('/api/stats', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.delete('/api/members/:id', async (req, res) => {
+  try { await db.deleteMember(parseInt(req.params.id)); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Health check ─────────────────────────────────────────
 
 app.get('/api/health', (req, res) => {

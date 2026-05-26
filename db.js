@@ -171,4 +171,17 @@ async function getApprovedCheckins() {
   return d.checkins.filter(c => c.status === 'approved').sort((a, b) => a.checkin_date.localeCompare(b.checkin_date));
 }
 
-module.exports = { getMembers, addMember, updateMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins };
+async function deleteMember(id) {
+  if (isCloud) {
+    const sql = await getSQL();
+    await sql`DELETE FROM checkins WHERE member_id=${id}`;
+    await sql`DELETE FROM members WHERE id=${id}`;
+    return;
+  }
+  const d = loadJSON();
+  d.checkins = d.checkins.filter(c => c.member_id !== id);
+  d.members = d.members.filter(m => m.id !== id);
+  saveJSON(d);
+}
+
+module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins };
