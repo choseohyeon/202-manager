@@ -341,7 +341,6 @@
               <th class="sticky" style="min-width:130px">멤버</th>
               ${weeks.map(w => `<th style="min-width:90px">${w.label}</th>`).join('')}
               <th style="min-width:80px">미인정</th>
-              <th style="min-width:80px">상태</th>
             </tr>
           </thead>
         `;
@@ -391,7 +390,6 @@
                   </td>
                   ${weekCells}
                   <td><span class="unrecognized-count ${unrecColor}">${member.unrecognizedCount}</span></td>
-                  <td>${statusBadge}</td>
                 </tr>
               `;
             }).join('')}
