@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; justify-content: center; }
-    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; line-height: 1.5; }
+    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 5px 10px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; line-height: 1.5; }
     .day-chip:hover { background: var(--danger-bg); color: var(--danger); }
 
     #loginOverlay {
@@ -137,7 +136,7 @@
         <button class="btn btn-ghost btn-sm" onclick="loadHolidays()">새로고침</button>
       </div>
       <div class="card" style="margin-bottom:16px">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">공휴일이 포함된 주는 출석 인정 기준 없이 자동으로 <span style="color:#7c3aed;font-weight:600">면제</span> 처리됩니다.</p>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">공휴일이 포함된 주는 출석 인정 기준 없이 자동으로 <span style="color:var(--exempted);font-weight:600">면제</span> 처리됩니다.</p>
         <div class="form-row">
           <div class="form-group" style="margin-bottom:0">
             <label>날짜</label>
@@ -201,9 +200,10 @@
 
     function formatDate(str) {
       if (!str) return '-';
-      const d = new Date(str + 'T00:00:00');
+      const [y, m, d] = str.split('-').map(Number);
+      const dow = new Date(Date.UTC(y, m - 1, d)).getDay();
       const days = ['일', '월', '화', '수', '목', '금', '토'];
-      return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
+      return `${m}/${d}(${days[dow]})`;
     }
 
     function timeAgo(isoStr) {
@@ -368,7 +368,7 @@
                   return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span><span class="week-status status-empty">미해당</span></div></td>`;
                 }
                 if (ws?.status === 'exempted') {
-                  return `<td><div class="week-cell"><span class="week-count" style="color:#7c3aed">-</span><span class="week-status status-exempted">면제</span></div></td>`;
+                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--exempted)">-</span><span class="week-status status-exempted">면제</span></div></td>`;
                 }
                 if (!ws) {
                   return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span></div></td>`;
@@ -631,6 +631,14 @@
     }
 
     async function exportExcel() {
+      if (!window.XLSX) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
       try {
         const res = await fetch('/api/stats');
         const { weeks, stats } = await res.json();
@@ -700,7 +708,8 @@
       document.getElementById('manualDate').max = getTodayStr();
       loadSummary();
       loadPending();
-      setInterval(loadSummary, 30000);
+      const _interval = setInterval(loadSummary, 30000);
+      window.addEventListener('beforeunload', () => clearInterval(_interval));
     }
 
     document.getElementById('loginForm').addEventListener('submit', async e => {

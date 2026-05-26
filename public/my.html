@@ -41,17 +41,17 @@
       font-weight: 600;
     }
     .public-table tr:last-child td { border-bottom: none; }
-    .public-table tr:hover td { background: #fafafa; }
-    .public-table tr:hover td.sticky { background: #fafafa; }
+    .public-table tr:hover td { background: var(--row-hover); }
+    .public-table tr:hover td.sticky { background: var(--row-hover); }
 
     .cell-inner { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .cell-count { font-size: 15px; font-weight: 700; }
     .cell-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
 
-    .row-at-risk td { background: #fffbeb !important; }
-    .row-revoke td { background: #fff1f1 !important; }
-    .row-at-risk td.sticky { background: #fffbeb !important; }
-    .row-revoke td.sticky { background: #fff1f1 !important; }
+    .row-at-risk td { background: var(--row-risk-bg) !important; }
+    .row-revoke td { background: var(--row-revoke-bg) !important; }
+    .row-at-risk td.sticky { background: var(--row-risk-bg) !important; }
+    .row-revoke td.sticky { background: var(--row-revoke-bg) !important; }
 
     .member-name-cell { font-weight: 700; }
     .member-seat-cell { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
@@ -120,13 +120,13 @@
             if (ws?.status === 'na')
               return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--gray)">-</span></div></td>`;
             if (ws?.status === 'exempted')
-              return `<td><div class="cell-inner"><span class="cell-count" style="color:#7c3aed">-</span><span class="cell-badge" style="background:#ede9fe;color:#7c3aed">면제</span></div></td>`;
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--exempted)">-</span><span class="cell-badge" style="background:var(--exempted-bg);color:var(--exempted)">면제</span></div></td>`;
             if (!ws)
               return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span></div></td>`;
             if (ws.status === 'ongoing' && ws.count === 0)
-              return `<td><div class="cell-inner"><span class="cell-badge" style="background:#dbeafe;color:#2563eb">진행중</span></div></td>`;
-            const color = ws.status === 'recognized' ? 'var(--success)' : ws.status === 'unrecognized' ? 'var(--warning)' : '#2563eb';
-            const bg = ws.status === 'recognized' ? 'var(--success-bg)' : ws.status === 'unrecognized' ? 'var(--warning-bg)' : '#dbeafe';
+              return `<td><div class="cell-inner"><span class="cell-badge" style="background:var(--ongoing-bg);color:var(--ongoing)">진행중</span></div></td>`;
+            const color = ws.status === 'recognized' ? 'var(--success)' : ws.status === 'unrecognized' ? 'var(--warning)' : 'var(--ongoing)';
+            const bg = ws.status === 'recognized' ? 'var(--success-bg)' : ws.status === 'unrecognized' ? 'var(--warning-bg)' : 'var(--ongoing-bg)';
             const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
             return `<td><div class="cell-inner"><span class="cell-count">${ws.count}일</span><span class="cell-badge" style="background:${bg};color:${color}">${label}</span></div></td>`;
           }).join('');
