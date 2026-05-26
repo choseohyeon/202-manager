@@ -3,73 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>내 출석 기록</title>
+  <title>출석 현황</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .my-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .my-summary-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
-      text-align: center;
-    }
-    .my-summary-card .label { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 6px; }
-    .my-summary-card .value { font-size: 22px; font-weight: 800; color: var(--text); }
-    .my-summary-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-
-    .history-table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--white); }
-    .history-table th { background: var(--gray-bg); padding: 10px 14px; text-align: left; font-size: 13px; color: var(--text-secondary); font-weight: 600; border-bottom: 1px solid var(--border); }
-    .history-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .history-table tr:last-child td { border-bottom: none; }
-    .history-table tr:hover td { background: #fafafa; }
-
-    .days-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; }
-
-    .week-label { font-weight: 600; white-space: nowrap; }
-    .week-count { font-weight: 700; }
-
     .nav-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 13px; color: var(--text-secondary);
-      text-decoration: none; margin-left: auto;
+      margin-left: auto; font-size: 13px; color: var(--text-secondary);
+      text-decoration: none;
     }
     .nav-link:hover { color: var(--primary); }
 
-    #statsArea { display: none; }
-
-    .this-week-card {
+    .public-table {
+      width: 100%;
+      border-collapse: collapse;
       background: var(--white);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+      font-size: 14px;
     }
-    .this-week-info .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
-    .this-week-info .big { font-size: 26px; font-weight: 800; }
-    .this-week-info .note { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-    .progress-bar-wrap { flex: 1; max-width: 200px; }
-    .progress-bar-bg { background: var(--gray-bg); border-radius: 100px; height: 10px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; border-radius: 100px; transition: width .4s; background: var(--primary); }
-    .progress-label { font-size: 12px; color: var(--text-secondary); margin-top: 6px; text-align: right; }
+    .public-table th {
+      background: var(--gray-bg);
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .public-table th.sticky { position: sticky; left: 0; z-index: 1; text-align: left; }
+    .public-table td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .public-table td.sticky {
+      position: sticky; left: 0; background: var(--white); z-index: 1;
+      text-align: left; box-shadow: 2px 0 4px rgba(0,0,0,.04);
+      font-weight: 600;
+    }
+    .public-table tr:last-child td { border-bottom: none; }
+    .public-table tr:hover td { background: #fafafa; }
+    .public-table tr:hover td.sticky { background: #fafafa; }
 
-    @media (max-width: 480px) {
-      .my-summary-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .my-summary-card { padding: 12px 8px; }
-      .my-summary-card .value { font-size: 18px; }
-      .this-week-card { flex-direction: column; align-items: flex-start; }
-      .progress-bar-wrap { width: 100%; max-width: 100%; }
-    }
+    .cell-inner { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .cell-count { font-size: 15px; font-weight: 700; }
+    .cell-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+
+    .row-at-risk td { background: #fffbeb !important; }
+    .row-revoke td { background: #fff1f1 !important; }
+    .row-at-risk td.sticky { background: #fffbeb !important; }
+    .row-revoke td.sticky { background: #fff1f1 !important; }
+
+    .member-name-cell { font-weight: 700; }
+    .member-seat-cell { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+    .this-week-highlight th { background: #eef2ff; color: var(--primary); }
+
+    #content { padding-top: 24px; }
   </style>
 </head>
 <body>
@@ -80,69 +69,21 @@
     </div>
   </header>
 
-  <div class="container" style="max-width:560px">
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-title" style="font-size:18px;font-weight:800;margin-bottom:4px">내 출석 기록</div>
-      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px">이름을 선택하면 출석 현황을 확인할 수 있습니다.</div>
-      <div class="form-group" style="margin-bottom:0">
-        <label for="memberSelect">이름 선택</label>
-        <select id="memberSelect" class="form-control" onchange="onMemberChange()">
-          <option value="">-- 이름을 선택하세요 --</option>
-        </select>
-      </div>
+  <div class="admin-container">
+    <div class="summary-grid" id="summaryCards" style="margin-bottom:20px">
+      <div class="summary-card"><div class="label">전체 멤버</div><div class="value" id="sumTotal">-</div></div>
+      <div class="summary-card"><div class="label">이번 주 인정</div><div class="value" id="sumThisWeek">-</div></div>
+      <div class="summary-card"><div class="label">위험 (3주 미달)</div><div class="value warning" id="sumAtRisk">-</div></div>
+      <div class="summary-card"><div class="label">박탈 대상 (4주↑)</div><div class="value danger" id="sumRevoke">-</div></div>
     </div>
 
-    <div id="statsArea">
-      <!-- 이번 주 현황 -->
-      <div class="this-week-card" id="thisWeekCard">
-        <div class="this-week-info">
-          <div class="label">이번 주 출석</div>
-          <div class="big" id="thisWeekBig">-</div>
-          <div class="note" id="thisWeekNote"></div>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
-          </div>
-          <div class="progress-label" id="progressLabel"></div>
-        </div>
-      </div>
+    <div class="section-header">
+      <span class="section-title">주별 출석 현황</span>
+      <span style="font-size:12px;color:var(--text-secondary)" id="lastUpdated"></span>
+    </div>
 
-      <!-- 요약 카드 -->
-      <div class="my-summary-grid">
-        <div class="my-summary-card">
-          <div class="label">총 출석 주</div>
-          <div class="value" id="sumRecognized">-</div>
-          <div class="sub">인정</div>
-        </div>
-        <div class="my-summary-card">
-          <div class="label">누적 미달</div>
-          <div class="value" id="sumUnrecognized" style="color:var(--warning)">-</div>
-          <div class="sub">주</div>
-        </div>
-        <div class="my-summary-card">
-          <div class="label">상태</div>
-          <div class="value" id="sumStatus" style="font-size:14px;padding-top:4px">-</div>
-        </div>
-      </div>
-
-      <!-- 주별 기록 -->
-      <div class="card">
-        <div style="font-size:15px;font-weight:700;margin-bottom:16px">주별 기록</div>
-        <div class="table-wrapper" style="border-radius:var(--radius-sm);box-shadow:none">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>기간</th>
-                <th>출석일</th>
-                <th style="text-align:center">횟수</th>
-                <th style="text-align:center">결과</th>
-              </tr>
-            </thead>
-            <tbody id="historyBody"></tbody>
-          </table>
-        </div>
-      </div>
+    <div id="content">
+      <div class="empty-state"><div class="icon">📊</div><p>불러오는 중...</p></div>
     </div>
   </div>
 
@@ -151,127 +92,99 @@
   <script>
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
-    function formatDate(str) {
-      if (!str) return '-';
-      const d = new Date(str + 'T00:00:00');
-      return `${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`;
-    }
+    function formatWeekLabel(w) { return w.label; }
 
     function showToast(msg, type = '') {
       const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = `toast ${type} show`;
+      t.textContent = msg; t.className = `toast ${type} show`;
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    async function loadMembers() {
-      const sel = document.getElementById('memberSelect');
-      try {
-        const res = await fetch('/api/members');
-        const members = await res.json();
-        members.forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m.id;
-          opt.textContent = `${m.name} (${m.seat_number}번 자리)`;
-          sel.appendChild(opt);
-        });
-      } catch {
-        showToast('멤버 목록을 불러올 수 없습니다.', 'error');
-      }
-    }
-
-    async function onMemberChange() {
-      const memberId = document.getElementById('memberSelect').value;
-      const statsArea = document.getElementById('statsArea');
-      if (!memberId) { statsArea.style.display = 'none'; return; }
+    async function load() {
       try {
         const res = await fetch('/api/stats');
         const { weeks, stats } = await res.json();
-        const member = stats.find(s => String(s.id) === String(memberId));
-        if (!member) return;
-        renderStats(member, weeks);
-        statsArea.style.display = 'block';
-      } catch {
-        showToast('데이터를 불러올 수 없습니다.', 'error');
-      }
-    }
+        const active = stats.filter(m => m.is_active);
 
-    function renderStats(member, weeks) {
-      // 이번 주 현황
-      const currentWeekStat = member.weekStats.find(w => w.isCurrentWeek);
-      const count = currentWeekStat?.count ?? 0;
-      const needed = Math.max(0, 4 - count);
-      const pct = Math.min(100, Math.round((count / 4) * 100));
+        // Summary
+        const currentWeekStats = active.map(m => m.weekStats.find(w => w.isCurrentWeek));
+        const thisWeekDone = currentWeekStats.filter(w => w?.status === 'recognized' || w?.status === 'exempted').length;
 
-      document.getElementById('thisWeekBig').textContent = `${count}일`;
-      document.getElementById('progressFill').style.width = pct + '%';
-      document.getElementById('progressFill').style.background =
-        count >= 4 ? 'var(--success)' : count >= 3 ? 'var(--warning)' : 'var(--primary)';
+        document.getElementById('sumTotal').textContent = active.length;
+        document.getElementById('sumThisWeek').textContent = `${thisWeekDone}/${active.length}`;
+        document.getElementById('sumAtRisk').textContent = active.filter(m => m.isAtRisk).length;
+        document.getElementById('sumRevoke').textContent = active.filter(m => m.shouldRevoke).length;
+        document.getElementById('lastUpdated').textContent = `${new Date().toLocaleTimeString('ko-KR')} 기준`;
 
-      if (currentWeekStat?.status === 'exempted') {
-        document.getElementById('thisWeekNote').textContent = '이번 주는 공휴일로 면제입니다.';
-        document.getElementById('progressLabel').textContent = '면제';
-      } else if (count >= 4) {
-        document.getElementById('thisWeekNote').textContent = '이번 주 출석 인정 완료 ✓';
-        document.getElementById('progressLabel').textContent = '4/4일';
-      } else {
-        document.getElementById('thisWeekNote').textContent = `${needed}일 더 출석하면 이번 주 인정`;
-        document.getElementById('progressLabel').textContent = `${count}/4일`;
-      }
+        // Alerts
+        let alerts = '';
+        const revokeList = active.filter(m => m.shouldRevoke);
+        const atRiskList = active.filter(m => m.isAtRisk);
+        if (revokeList.length > 0)
+          alerts += `<div class="alert alert-error">🚨 자리 박탈 대상: ${revokeList.map(m => `<strong>${m.name}</strong>`).join(', ')} (미인정 4주 이상)</div>`;
+        if (atRiskList.length > 0)
+          alerts += `<div class="alert alert-warning">⚠️ 위험: ${atRiskList.map(m => `<strong>${m.name}</strong>`).join(', ')} (미인정 3주 — 다음 주 미달 시 박탈)</div>`;
 
-      // 요약
-      const completed = member.weekStats.filter(w => w.status !== 'ongoing' && w.status !== 'exempted');
-      const recognized = completed.filter(w => w.status === 'recognized').length;
-      const unrecognized = member.unrecognizedCount;
-
-      document.getElementById('sumRecognized').textContent = recognized;
-      document.getElementById('sumUnrecognized').textContent = unrecognized;
-      document.getElementById('sumUnrecognized').style.color =
-        unrecognized >= 4 ? 'var(--danger)' : unrecognized >= 3 ? 'var(--warning)' : 'var(--text)';
-
-      const statusEl = document.getElementById('sumStatus');
-      if (!member.is_active) {
-        statusEl.innerHTML = '<span class="badge badge-gray">비활성</span>';
-      } else if (member.shouldRevoke) {
-        statusEl.innerHTML = '<span class="badge badge-danger">박탈대상</span>';
-      } else if (member.isAtRisk) {
-        statusEl.innerHTML = '<span class="badge badge-warning">위험</span>';
-      } else {
-        statusEl.innerHTML = '<span class="badge badge-success">정상</span>';
-      }
-
-      // 주별 기록 (최신순)
-      const tbody = document.getElementById('historyBody');
-      const sortedWeeks = [...weeks].reverse();
-      tbody.innerHTML = sortedWeeks.map(weekInfo => {
-        const ws = member.weekStats.find(s => s.week === weekInfo.week);
-        const days = ws?.days ?? [];
-        const cnt = ws?.count ?? 0;
-        const status = ws?.status ?? 'empty';
-
-        let badgeHtml;
-        if (status === 'exempted') badgeHtml = '<span class="badge" style="background:#ede9fe;color:#7c3aed">면제</span>';
-        else if (status === 'recognized') badgeHtml = '<span class="badge badge-success">인정</span>';
-        else if (status === 'unrecognized') badgeHtml = '<span class="badge badge-warning">미인정</span>';
-        else if (status === 'ongoing') badgeHtml = '<span class="badge" style="background:#dbeafe;color:#2563eb">진행중</span>';
-        else badgeHtml = '<span class="badge badge-gray">-</span>';
-
-        const chipsHtml = days.length > 0
-          ? `<div class="days-chips">${days.map(d => `<span class="day-chip">${formatDate(d)}</span>`).join('')}</div>`
-          : '<span style="color:var(--text-secondary);font-size:13px">없음</span>';
-
-        return `
+        // Table
+        const thead = `<thead>
           <tr>
-            <td class="week-label">${weekInfo.label}</td>
-            <td>${chipsHtml}</td>
-            <td style="text-align:center" class="week-count">${cnt > 0 ? cnt + '일' : '-'}</td>
-            <td style="text-align:center">${badgeHtml}</td>
+            <th class="sticky" style="min-width:110px">이름</th>
+            ${weeks.map(w => {
+              const isCurrent = w.week === weeks[weeks.length - 1]?.week;
+              return `<th style="min-width:80px${isCurrent ? ';color:var(--primary)' : ''}">${w.label}${isCurrent ? '<br><span style="font-size:10px;font-weight:500">이번 주</span>' : ''}</th>`;
+            }).join('')}
+            <th style="min-width:70px">미인정</th>
+            <th style="min-width:70px">상태</th>
           </tr>
+        </thead>`;
+
+        const tbody = `<tbody>${active.map(member => {
+          const rowClass = member.shouldRevoke ? 'row-revoke' : member.isAtRisk ? 'row-at-risk' : '';
+          const statusBadge = member.shouldRevoke
+            ? `<span class="badge badge-danger">박탈대상</span>`
+            : member.isAtRisk
+              ? `<span class="badge badge-warning">위험</span>`
+              : `<span class="badge badge-success">정상</span>`;
+
+          const weekCells = weeks.map(w => {
+            const ws = member.weekStats.find(s => s.week === w.week);
+            if (ws?.status === 'exempted')
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:#7c3aed">-</span><span class="cell-badge" style="background:#ede9fe;color:#7c3aed">면제</span></div></td>`;
+            if (!ws || ws.count === 0)
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--gray)">0일</span></div></td>`;
+            const color = ws.status === 'recognized' ? 'var(--success)' : ws.status === 'unrecognized' ? 'var(--warning)' : '#2563eb';
+            const bg = ws.status === 'recognized' ? 'var(--success-bg)' : ws.status === 'unrecognized' ? 'var(--warning-bg)' : '#dbeafe';
+            const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
+            return `<td><div class="cell-inner"><span class="cell-count">${ws.count}일</span><span class="cell-badge" style="background:${bg};color:${color}">${label}</span></div></td>`;
+          }).join('');
+
+          const unrecColor = member.unrecognizedCount >= 4 ? 'var(--danger)' : member.unrecognizedCount >= 3 ? 'var(--warning)' : 'var(--text)';
+
+          return `<tr class="${rowClass}">
+            <td class="sticky">
+              <div class="member-name-cell">${member.name}</div>
+              <div class="member-seat-cell">${member.seat_number}번 자리</div>
+            </td>
+            ${weekCells}
+            <td><span style="font-weight:800;font-size:16px;color:${unrecColor}">${member.unrecognizedCount}</span></td>
+            <td>${statusBadge}</td>
+          </tr>`;
+        }).join('')}</tbody>`;
+
+        document.getElementById('content').innerHTML = `
+          ${alerts}
+          <div class="table-wrapper">
+            <table class="public-table">${thead}${tbody}</table>
+          </div>
+          <p style="font-size:12px;color:var(--text-secondary);margin-top:12px">* 인정 기준: 주 4일 이상 출석 / 미인정 4주 누적 시 자리 박탈</p>
         `;
-      }).join('');
+      } catch (err) {
+        document.getElementById('content').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+        console.error(err);
+      }
     }
 
-    loadMembers();
+    load();
   </script>
 </body>
 </html>
