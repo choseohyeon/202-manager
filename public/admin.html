@@ -334,16 +334,6 @@
           return;
         }
 
-        let revokeList = stats.filter(s => s.is_active && s.shouldRevoke);
-        let atRiskList = stats.filter(s => s.is_active && s.isAtRisk);
-
-        let alerts = '';
-        if (revokeList.length > 0) {
-          alerts += `<div class="alert alert-error">🚨 자리 박탈 대상: ${revokeList.map(s => `<strong>${s.name}</strong>`).join(', ')} (미인정 4주 이상)</div>`;
-        }
-        if (atRiskList.length > 0) {
-          alerts += `<div class="alert alert-warning">⚠️ 위험 경고: ${atRiskList.map(s => `<strong>${s.name}</strong>`).join(', ')} (미인정 3주 — 다음 주 미달 시 박탈)</div>`;
-        }
 
         const thead = `
           <thead>
@@ -409,7 +399,6 @@
         `;
 
         container.innerHTML = `
-          ${alerts}
           <div class="table-wrapper">
             <table class="stats-table">${thead}${tbody}</table>
           </div>
