@@ -158,7 +158,7 @@ app.get('/api/stats', async (req, res) => {
       weekSet.add(week);
       const key = `${c.member_id}_${week}`;
       if (!byMW[key]) byMW[key] = [];
-      byMW[key].push(c.checkin_date);
+      byMW[key].push({ date: c.checkin_date, id: c.id });
     }
     const currentWeek = getWeekStart(getTodayKR());
     weekSet.add(currentWeek);

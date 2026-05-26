@@ -10,7 +10,8 @@
     .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .day-chip:hover { background: var(--danger-bg); color: var(--danger); }
 
     #loginOverlay {
       position: fixed; inset: 0; background: var(--bg);
@@ -377,8 +378,8 @@
                 }
                 const cls = ws.status === 'recognized' ? 'status-recognized' : ws.status === 'unrecognized' ? 'status-unrecognized' : 'status-ongoing';
                 const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
-                const daysHtml = ws.days.map(d => `<span class="day-chip">${formatDate(d)}</span>`).join('');
-                return `<td title="${ws.days.join(', ')}">
+                const daysHtml = ws.days.map(d => `<span class="day-chip" onclick="deleteDay(${d.id},'${d.date}')" title="클릭하여 삭제">${formatDate(d.date)}</span>`).join('');
+                return `<td title="${ws.days.map(d => d.date).join(', ')}">
                   <div class="week-cell">
                     <span class="week-count">${ws.count}일</span>
                     <span class="week-status ${cls}">${label}</span>
@@ -608,6 +609,20 @@
       } catch (err) { showToast(err.message, 'error'); }
     }
 
+    // ── Delete approved checkin ───────────────────────
+    async function deleteDay(id, date) {
+      if (!confirm(`${formatDate(date)} 출석을 삭제하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`/api/checkins/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        showToast('출석이 삭제되었습니다.', 'success');
+        loadStats();
+        loadSummary();
+      } catch {
+        showToast('오류가 발생했습니다.', 'error');
+      }
+    }
+
     // ── Excel Export ──────────────────────────────────
     function getWeekDatesClient(weekStart) {
       const dates = [];
@@ -651,7 +666,7 @@
 
             const memberRow = [`${member.name} (${member.seat_number})`, metStatus];
             for (const date of weekDates) {
-              memberRow.push(ws?.days?.includes(date) ? 'O' : '');
+              memberRow.push(ws?.days?.some(d => d.date === date) ? 'O' : '');
             }
 
             const weekIdx = weeks.findIndex(w => w.week === weekInfo.week);
