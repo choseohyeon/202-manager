@@ -376,8 +376,8 @@
                 if (ws?.status === 'exempted') {
                   return `<td><div class="week-cell"><span class="week-count" style="color:#7c3aed">-</span><span class="week-status status-exempted">면제</span></div></td>`;
                 }
-                if (!ws || ws.count === 0) {
-                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span><span class="week-status status-empty">0일</span></div></td>`;
+                if (!ws) {
+                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span></div></td>`;
                 }
                 const cls = ws.status === 'recognized' ? 'status-recognized' : ws.status === 'unrecognized' ? 'status-unrecognized' : 'status-ongoing';
                 const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';

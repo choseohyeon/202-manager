@@ -121,8 +121,8 @@
               return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--gray)">-</span></div></td>`;
             if (ws?.status === 'exempted')
               return `<td><div class="cell-inner"><span class="cell-count" style="color:#7c3aed">-</span><span class="cell-badge" style="background:#ede9fe;color:#7c3aed">면제</span></div></td>`;
-            if (!ws || ws.count === 0)
-              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--gray)">0일</span></div></td>`;
+            if (!ws)
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span></div></td>`;
             const color = ws.status === 'recognized' ? 'var(--success)' : ws.status === 'unrecognized' ? 'var(--warning)' : '#2563eb';
             const bg = ws.status === 'recognized' ? 'var(--success-bg)' : ws.status === 'unrecognized' ? 'var(--warning-bg)' : '#dbeafe';
             const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
