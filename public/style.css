@@ -485,6 +485,15 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 
 .section-title { font-size: 16px; font-weight: 700; }
 
+/* ── Nav link ───────────────────────────── */
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.nav-link:hover { color: var(--primary); }
+
 /* ── Utility ────────────────────────────── */
 
 .inactive-member { opacity: .5; }
