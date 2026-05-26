@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
     .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
@@ -77,7 +78,10 @@
     <div class="tab-pane" id="tabAttendance">
       <div class="section-header">
         <span class="section-title">주별 출석 현황</span>
-        <button class="btn btn-ghost btn-sm" onclick="loadStats()">새로고침</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📥 Excel 다운로드</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadStats()">새로고침</button>
+        </div>
       </div>
       <div id="statsContent"><div class="empty-state"><div class="icon">📊</div><p>불러오는 중...</p></div></div>
     </div>
@@ -602,6 +606,75 @@
         document.getElementById('manualDate').value = '';
         loadSummary();
       } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ── Excel Export ──────────────────────────────────
+    function getWeekDatesClient(weekStart) {
+      const dates = [];
+      const d = new Date(weekStart + 'T00:00:00');
+      for (let i = 0; i < 7; i++) {
+        const c = new Date(d);
+        c.setDate(c.getDate() + i);
+        dates.push(c.toISOString().split('T')[0]);
+      }
+      return dates;
+    }
+
+    async function exportExcel() {
+      try {
+        const res = await fetch('/api/stats');
+        const { weeks, stats } = await res.json();
+        const activeStats = stats.filter(m => m.is_active);
+        if (activeStats.length === 0) return showToast('내보낼 데이터가 없습니다.', 'error');
+
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        const rows = [];
+
+        for (const weekInfo of weeks) {
+          const weekDates = getWeekDatesClient(weekInfo.week);
+
+          const headerRow = ['', '출석 요건 만족 여부'];
+          for (const date of weekDates) {
+            const d = new Date(date + 'T00:00:00');
+            headerRow.push(`${d.getMonth()+1}/${d.getDate()}(${dayNames[d.getDay()]})`);
+          }
+          headerRow.push('누적 미달 횟수');
+          rows.push(headerRow);
+
+          for (const member of activeStats) {
+            const ws = member.weekStats.find(s => s.week === weekInfo.week);
+            let metStatus;
+            if (ws?.status === 'exempted') metStatus = '면제';
+            else if (ws?.status === 'recognized') metStatus = 'O';
+            else if (ws?.status === 'ongoing') metStatus = '진행중';
+            else metStatus = 'X';
+
+            const memberRow = [`${member.name} (${member.seat_number})`, metStatus];
+            for (const date of weekDates) {
+              memberRow.push(ws?.days?.includes(date) ? 'O' : '');
+            }
+
+            const weekIdx = weeks.findIndex(w => w.week === weekInfo.week);
+            const weeksUpTo = weeks.slice(0, weekIdx + 1).map(w => w.week);
+            const unrecCount = member.weekStats.filter(s =>
+              weeksUpTo.includes(s.week) && s.status === 'unrecognized'
+            ).length;
+            memberRow.push(unrecCount > 0 ? `${unrecCount}회` : '');
+            rows.push(memberRow);
+          }
+
+          rows.push([]);
+        }
+
+        const wb = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, worksheet, '출결 집계');
+        XLSX.writeFile(wb, `열람실_출결_집계_${getTodayStr()}.xlsx`);
+        showToast('Excel 파일이 다운로드되었습니다.', 'success');
+      } catch (err) {
+        showToast('내보내기에 실패했습니다.', 'error');
+        console.error(err);
+      }
     }
 
     // ── Login ─────────────────────────────────────────
