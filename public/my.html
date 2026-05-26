@@ -70,13 +70,6 @@
   </header>
 
   <div class="admin-container">
-    <div class="summary-grid" id="summaryCards" style="margin-bottom:20px">
-      <div class="summary-card"><div class="label">전체 멤버</div><div class="value" id="sumTotal">-</div></div>
-      <div class="summary-card"><div class="label">이번 주 인정</div><div class="value" id="sumThisWeek">-</div></div>
-      <div class="summary-card"><div class="label">위험 (3주 미달)</div><div class="value warning" id="sumAtRisk">-</div></div>
-      <div class="summary-card"><div class="label">박탈 대상 (4주↑)</div><div class="value danger" id="sumRevoke">-</div></div>
-    </div>
-
     <div class="section-header">
       <span class="section-title">주별 출석 현황</span>
       <span style="font-size:12px;color:var(--text-secondary)" id="lastUpdated"></span>
@@ -106,24 +99,7 @@
         const { weeks, stats } = await res.json();
         const active = stats.filter(m => m.is_active);
 
-        // Summary
-        const currentWeekStats = active.map(m => m.weekStats.find(w => w.isCurrentWeek));
-        const thisWeekDone = currentWeekStats.filter(w => w?.status === 'recognized' || w?.status === 'exempted').length;
-
-        document.getElementById('sumTotal').textContent = active.length;
-        document.getElementById('sumThisWeek').textContent = `${thisWeekDone}/${active.length}`;
-        document.getElementById('sumAtRisk').textContent = active.filter(m => m.isAtRisk).length;
-        document.getElementById('sumRevoke').textContent = active.filter(m => m.shouldRevoke).length;
         document.getElementById('lastUpdated').textContent = `${new Date().toLocaleTimeString('ko-KR')} 기준`;
-
-        // Alerts
-        let alerts = '';
-        const revokeList = active.filter(m => m.shouldRevoke);
-        const atRiskList = active.filter(m => m.isAtRisk);
-        if (revokeList.length > 0)
-          alerts += `<div class="alert alert-error">🚨 자리 박탈 대상: ${revokeList.map(m => `<strong>${m.name}</strong>`).join(', ')} (미인정 4주 이상)</div>`;
-        if (atRiskList.length > 0)
-          alerts += `<div class="alert alert-warning">⚠️ 위험: ${atRiskList.map(m => `<strong>${m.name}</strong>`).join(', ')} (미인정 3주 — 다음 주 미달 시 박탈)</div>`;
 
         // Table
         const thead = `<thead>
@@ -133,18 +109,10 @@
               const isCurrent = w.week === weeks[weeks.length - 1]?.week;
               return `<th style="min-width:80px${isCurrent ? ';color:var(--primary)' : ''}">${w.label}${isCurrent ? '<br><span style="font-size:10px;font-weight:500">이번 주</span>' : ''}</th>`;
             }).join('')}
-            <th style="min-width:70px">미인정</th>
-            <th style="min-width:70px">상태</th>
           </tr>
         </thead>`;
 
         const tbody = `<tbody>${active.map(member => {
-          const rowClass = member.shouldRevoke ? 'row-revoke' : member.isAtRisk ? 'row-at-risk' : '';
-          const statusBadge = member.shouldRevoke
-            ? `<span class="badge badge-danger">박탈대상</span>`
-            : member.isAtRisk
-              ? `<span class="badge badge-warning">위험</span>`
-              : `<span class="badge badge-success">정상</span>`;
 
           const weekCells = weeks.map(w => {
             const ws = member.weekStats.find(s => s.week === w.week);
@@ -158,25 +126,20 @@
             return `<td><div class="cell-inner"><span class="cell-count">${ws.count}일</span><span class="cell-badge" style="background:${bg};color:${color}">${label}</span></div></td>`;
           }).join('');
 
-          const unrecColor = member.unrecognizedCount >= 4 ? 'var(--danger)' : member.unrecognizedCount >= 3 ? 'var(--warning)' : 'var(--text)';
-
-          return `<tr class="${rowClass}">
+          return `<tr>
             <td class="sticky">
               <div class="member-name-cell">${member.name}</div>
               <div class="member-seat-cell">${member.seat_number}번 자리</div>
             </td>
             ${weekCells}
-            <td><span style="font-weight:800;font-size:16px;color:${unrecColor}">${member.unrecognizedCount}</span></td>
-            <td>${statusBadge}</td>
           </tr>`;
         }).join('')}</tbody>`;
 
         document.getElementById('content').innerHTML = `
-          ${alerts}
           <div class="table-wrapper">
             <table class="public-table">${thead}${tbody}</table>
           </div>
-          <p style="font-size:12px;color:var(--text-secondary);margin-top:12px">* 인정 기준: 주 4일 이상 출석 / 미인정 4주 누적 시 자리 박탈</p>
+          <p style="font-size:12px;color:var(--text-secondary);margin-top:12px">* 인정 기준: 주 4일 이상 출석</p>
         `;
       } catch (err) {
         document.getElementById('content').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
