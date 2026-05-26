@@ -615,14 +615,11 @@
 
     // ── Excel Export ──────────────────────────────────
     function getWeekDatesClient(weekStart) {
-      const dates = [];
-      const d = new Date(weekStart + 'T00:00:00');
-      for (let i = 0; i < 7; i++) {
-        const c = new Date(d);
-        c.setDate(c.getDate() + i);
-        dates.push(c.toISOString().split('T')[0]);
-      }
-      return dates;
+      const [y, m, d] = weekStart.split('-').map(Number);
+      return Array.from({length: 7}, (_, i) => {
+        const date = new Date(Date.UTC(y, m - 1, d + i));
+        return date.toISOString().split('T')[0];
+      });
     }
 
     async function exportExcel() {
