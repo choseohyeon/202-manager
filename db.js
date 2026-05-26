@@ -1,5 +1,5 @@
-// 로컬: JSON 파일 / Vercel: PostgreSQL — 환경 자동 감지
-const isCloud = !!process.env.POSTGRES_URL;
+// 로컬: JSON 파일 / Vercel: Neon PostgreSQL — 환경 자동 감지
+const isCloud = !!process.env.DATABASE_URL;
 const path = require('path');
 const fs = require('fs');
 
@@ -19,13 +19,16 @@ function loadJSON() {
 function saveJSON(d) { fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2)); }
 function nowStr() { return new Date().toLocaleString('sv-SE').replace('T', ' '); }
 
-// ── Vercel Postgres 구현 ──────────────────────────────────
+// ── Neon PostgreSQL 구현 ──────────────────────────────────
 
 let _sql = null;
 let _pgReady = false;
 
-async function sql() {
-  if (!_sql) _sql = require('@vercel/postgres').sql;
+async function getSQL() {
+  if (!_sql) {
+    const { neon } = require('@neondatabase/serverless');
+    _sql = neon(process.env.DATABASE_URL);
+  }
   if (!_pgReady) {
     await _sql`CREATE TABLE IF NOT EXISTS members (
       id SERIAL PRIMARY KEY, name TEXT NOT NULL,
@@ -48,11 +51,10 @@ async function sql() {
 
 async function getMembers(activeOnly = true) {
   if (isCloud) {
-    const q = await sql();
-    const r = activeOnly
-      ? await q`SELECT * FROM members WHERE is_active=1 ORDER BY seat_number`
-      : await q`SELECT * FROM members ORDER BY seat_number`;
-    return r.rows;
+    const sql = await getSQL();
+    return activeOnly
+      ? await sql`SELECT * FROM members WHERE is_active=1 ORDER BY seat_number`
+      : await sql`SELECT * FROM members ORDER BY seat_number`;
   }
   const d = loadJSON();
   const list = activeOnly ? d.members.filter(m => m.is_active) : d.members;
@@ -61,10 +63,10 @@ async function getMembers(activeOnly = true) {
 
 async function addMember(name, seat_number) {
   if (isCloud) {
-    const q = await sql();
+    const sql = await getSQL();
     try {
-      const r = await q`INSERT INTO members(name,seat_number) VALUES(${name},${seat_number}) RETURNING *`;
-      return r.rows[0];
+      const r = await sql`INSERT INTO members(name,seat_number) VALUES(${name},${seat_number}) RETURNING *`;
+      return r[0];
     } catch (e) {
       if (e.code === '23505') throw new Error('이미 사용 중인 자리번호입니다.');
       throw e;
@@ -80,11 +82,11 @@ async function addMember(name, seat_number) {
 
 async function updateMember(id, updates) {
   if (isCloud) {
-    const q = await sql();
+    const sql = await getSQL();
     try {
-      if (updates.name !== undefined) await q`UPDATE members SET name=${updates.name} WHERE id=${id}`;
-      if (updates.seat_number !== undefined) await q`UPDATE members SET seat_number=${updates.seat_number} WHERE id=${id}`;
-      if (updates.is_active !== undefined) await q`UPDATE members SET is_active=${updates.is_active} WHERE id=${id}`;
+      if (updates.name !== undefined) await sql`UPDATE members SET name=${updates.name} WHERE id=${id}`;
+      if (updates.seat_number !== undefined) await sql`UPDATE members SET seat_number=${updates.seat_number} WHERE id=${id}`;
+      if (updates.is_active !== undefined) await sql`UPDATE members SET is_active=${updates.is_active} WHERE id=${id}`;
     } catch (e) {
       if (e.code === '23505') throw new Error('이미 사용 중인 자리번호입니다.');
       throw e;
@@ -103,11 +105,11 @@ async function updateMember(id, updates) {
 async function addCheckin(member_id, checkin_date, photo_path = null, status = 'pending') {
   const errMsg = status === 'approved' ? '이미 해당 날짜에 출석이 있습니다.' : '이미 해당 날짜에 출석 신청이 되어 있습니다.';
   if (isCloud) {
-    const q = await sql();
+    const sql = await getSQL();
     try {
-      const r = await q`INSERT INTO checkins(member_id,checkin_date,photo_path,status)
+      const r = await sql`INSERT INTO checkins(member_id,checkin_date,photo_path,status)
         VALUES(${member_id},${checkin_date},${photo_path},${status}) RETURNING *`;
-      return r.rows[0];
+      return r[0];
     } catch (e) {
       if (e.code === '23505') throw new Error(errMsg);
       throw e;
@@ -123,11 +125,10 @@ async function addCheckin(member_id, checkin_date, photo_path = null, status = '
 
 async function getCheckins(statusFilter = null) {
   if (isCloud) {
-    const q = await sql();
-    const r = statusFilter
-      ? await q`SELECT c.*,m.name,m.seat_number FROM checkins c JOIN members m ON c.member_id=m.id WHERE c.status=${statusFilter} ORDER BY c.created_at DESC`
-      : await q`SELECT c.*,m.name,m.seat_number FROM checkins c JOIN members m ON c.member_id=m.id ORDER BY c.created_at DESC`;
-    return r.rows;
+    const sql = await getSQL();
+    return statusFilter
+      ? await sql`SELECT c.*,m.name,m.seat_number FROM checkins c JOIN members m ON c.member_id=m.id WHERE c.status=${statusFilter} ORDER BY c.created_at DESC`
+      : await sql`SELECT c.*,m.name,m.seat_number FROM checkins c JOIN members m ON c.member_id=m.id ORDER BY c.created_at DESC`;
   }
   const d = loadJSON();
   const checkins = statusFilter ? d.checkins.filter(c => c.status === statusFilter) : d.checkins;
@@ -138,8 +139,8 @@ async function getCheckins(statusFilter = null) {
 
 async function updateCheckinStatus(id, status, note = null) {
   if (isCloud) {
-    const q = await sql();
-    await q`UPDATE checkins SET status=${status},note=${note} WHERE id=${id}`;
+    const sql = await getSQL();
+    await sql`UPDATE checkins SET status=${status},note=${note} WHERE id=${id}`;
     return;
   }
   const d = loadJSON();
@@ -152,8 +153,8 @@ async function updateCheckinStatus(id, status, note = null) {
 
 async function deleteCheckin(id) {
   if (isCloud) {
-    const q = await sql();
-    await q`DELETE FROM checkins WHERE id=${id}`;
+    const sql = await getSQL();
+    await sql`DELETE FROM checkins WHERE id=${id}`;
     return;
   }
   const d = loadJSON();
@@ -163,9 +164,8 @@ async function deleteCheckin(id) {
 
 async function getApprovedCheckins() {
   if (isCloud) {
-    const q = await sql();
-    const r = await q`SELECT * FROM checkins WHERE status='approved' ORDER BY checkin_date`;
-    return r.rows;
+    const sql = await getSQL();
+    return await sql`SELECT * FROM checkins WHERE status='approved' ORDER BY checkin_date`;
   }
   const d = loadJSON();
   return d.checkins.filter(c => c.status === 'approved').sort((a, b) => a.checkin_date.localeCompare(b.checkin_date));
