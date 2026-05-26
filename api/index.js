@@ -165,18 +165,20 @@ app.get('/api/stats', async (req, res) => {
     const sortedWeeks = Array.from(weekSet).sort();
 
     const stats = members.map(member => {
+      const memberFirstWeek = sortedWeeks.find(w => byMW[`${member.id}_${w}`]?.length > 0) || currentWeek;
       const weekStats = sortedWeeks.map(week => {
         const days = byMW[`${member.id}_${week}`] || [];
         const complete = isWeekComplete(week);
         const hasHoliday = getWeekDates(week).some(d => holidaySet.has(d));
         let status;
-        if (hasHoliday) status = 'exempted';
+        if (week < memberFirstWeek) status = 'na';
+        else if (hasHoliday) status = 'exempted';
         else if (!complete) status = 'ongoing';
         else if (days.length >= 4) status = 'recognized';
         else status = 'unrecognized';
         return { week, label: formatWeekLabel(week), count: days.length, days, status, isCurrentWeek: week === currentWeek, hasHoliday };
       });
-      const completed = weekStats.filter(w => w.status !== 'ongoing' && w.status !== 'exempted');
+      const completed = weekStats.filter(w => w.status !== 'ongoing' && w.status !== 'exempted' && w.status !== 'na');
       const unrecognizedCount = completed.filter(w => w.status === 'unrecognized').length;
       return { ...member, weekStats, unrecognizedCount, isAtRisk: unrecognizedCount === 3, shouldRevoke: unrecognizedCount >= 4 };
     });

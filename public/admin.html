@@ -370,6 +370,9 @@
 
               const weekCells = weeks.map(w => {
                 const ws = member.weekStats.find(s => s.week === w.week);
+                if (ws?.status === 'na') {
+                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span><span class="week-status status-empty">미해당</span></div></td>`;
+                }
                 if (ws?.status === 'exempted') {
                   return `<td><div class="week-cell"><span class="week-count" style="color:#7c3aed">-</span><span class="week-status status-exempted">면제</span></div></td>`;
                 }
