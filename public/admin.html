@@ -10,9 +10,34 @@
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
     .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+
+    #loginOverlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .login-card {
+      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-md);
+      padding: 40px 32px; width: 100%; max-width: 360px; text-align: center;
+    }
+    .login-card h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .login-card p { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+    .login-error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
   </style>
 </head>
 <body>
+  <!-- 로그인 오버레이 -->
+  <div id="loginOverlay">
+    <div class="login-card">
+      <h2>🔒 관리자 로그인</h2>
+      <p>열람실 출석 관리자 전용 페이지입니다.</p>
+      <form id="loginForm">
+        <input type="password" id="adminPassword" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" style="margin-bottom:12px">
+        <button type="submit" class="btn btn-primary btn-block">로그인</button>
+      </form>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
   <header class="page-header">
     <div class="page-header-inner">
       <h1>📚 열람실 관리자 대시보드</h1>
@@ -504,13 +529,46 @@
       } catch (err) { showToast(err.message, 'error'); }
     }
 
-    // ── Init ──────────────────────────────────────────
-    document.getElementById('manualDate').value = getTodayStr();
-    document.getElementById('manualDate').max = getTodayStr();
+    // ── Login ─────────────────────────────────────────
+    const overlay = document.getElementById('loginOverlay');
 
-    loadSummary();
-    loadPending();
-    setInterval(loadSummary, 30000); // auto-refresh summary every 30s
+    function checkSession() {
+      return sessionStorage.getItem('admin_auth') === 'true';
+    }
+
+    function showDashboard() {
+      overlay.style.display = 'none';
+      document.getElementById('manualDate').value = getTodayStr();
+      document.getElementById('manualDate').max = getTodayStr();
+      loadSummary();
+      loadPending();
+      setInterval(loadSummary, 30000);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const password = document.getElementById('adminPassword').value;
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+      try {
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        sessionStorage.setItem('admin_auth', 'true');
+        showDashboard();
+      } catch (err) {
+        errEl.textContent = err.message;
+        document.getElementById('adminPassword').value = '';
+      }
+    });
+
+    if (checkSession()) {
+      showDashboard();
+    }
   </script>
 </body>
 </html>

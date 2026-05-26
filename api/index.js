@@ -173,6 +173,16 @@ app.delete('/api/members/:id', async (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Admin auth ───────────────────────────────────────────
+
+app.post('/api/admin/verify', (req, res) => {
+  const { password } = req.body;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return res.status(500).json({ error: '서버 설정 오류' });
+  if (password === adminPassword) return res.json({ ok: true });
+  res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+});
+
 // ── Health check ─────────────────────────────────────────
 
 app.get('/api/health', (req, res) => {
