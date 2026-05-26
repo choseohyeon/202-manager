@@ -10,7 +10,7 @@
     .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; justify-content: center; }
-    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; line-height: 1.5; }
     .day-chip:hover { background: var(--danger-bg); color: var(--danger); }
 
     #loginOverlay {
@@ -33,7 +33,7 @@
       <h2>🔒 관리자 로그인</h2>
       <p>열람실 출석 관리자 전용 페이지입니다.</p>
       <form id="loginForm">
-        <input type="password" id="adminPassword" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" style="margin-bottom:12px">
+        <input type="password" id="adminPassword" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" aria-label="비밀번호" style="margin-bottom:12px">
         <button type="submit" class="btn btn-primary btn-block">로그인</button>
       </form>
       <div class="login-error" id="loginError"></div>
@@ -57,17 +57,17 @@
     </div>
 
     <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="pending">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="pending" role="tab" aria-selected="true" aria-controls="tabPending" id="tab-btn-pending">
         대기 요청
         <span class="admin-badge-pending" id="pendingBadge" style="display:none">0</span>
       </button>
-      <button class="tab-btn" data-tab="attendance">출석 현황</button>
-      <button class="tab-btn" data-tab="members">사용자 관리</button>
+      <button class="tab-btn" data-tab="attendance" role="tab" aria-selected="false" aria-controls="tabAttendance" id="tab-btn-attendance">출석 현황</button>
+      <button class="tab-btn" data-tab="members" role="tab" aria-selected="false" aria-controls="tabMembers" id="tab-btn-members">사용자 관리</button>
     </div>
 
     <!-- Tab: 대기 요청 -->
-    <div class="tab-pane active" id="tabPending">
+    <div class="tab-pane active" id="tabPending" role="tabpanel" aria-labelledby="tab-btn-pending">
       <div class="section-header">
         <span class="section-title">승인 대기 중인 출석 신청</span>
         <button class="btn btn-ghost btn-sm" onclick="loadPending()">새로고침</button>
@@ -76,7 +76,7 @@
     </div>
 
     <!-- Tab: 출석 현황 -->
-    <div class="tab-pane" id="tabAttendance">
+    <div class="tab-pane" id="tabAttendance" role="tabpanel" aria-labelledby="tab-btn-attendance">
       <div class="section-header">
         <span class="section-title">주별 출석 현황</span>
         <div style="display:flex;gap:8px">
@@ -88,7 +88,7 @@
     </div>
 
     <!-- Tab: 사용자 관리 -->
-    <div class="tab-pane" id="tabMembers">
+    <div class="tab-pane" id="tabMembers" role="tabpanel" aria-labelledby="tab-btn-members">
       <div class="section-header">
         <span class="section-title">사용자 추가</span>
       </div>
@@ -155,7 +155,7 @@
   </div>
 
   <!-- Photo Modal -->
-  <div class="modal-overlay" id="photoModal" style="display:none" onclick="closeModal()">
+  <div class="modal-overlay" id="photoModal" style="display:none" role="dialog" aria-modal="true" aria-label="출석 사진" onclick="closeModal()">
     <img id="modalImg" src="" alt="출석 사진" onclick="event.stopPropagation()">
   </div>
 
@@ -165,9 +165,10 @@
     // ── Tab switching ─────────────────────────────────
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
         document.getElementById('tab' + capitalize(btn.dataset.tab)).classList.add('active');
         if (btn.dataset.tab === 'attendance') loadStats();
         if (btn.dataset.tab === 'members') { loadMemberTable(); loadHolidays(); }
@@ -270,7 +271,7 @@
               <div class="pending-card-meta">
                 ${item.seat_number}번 자리 · ${formatDate(item.checkin_date)} · ${timeAgo(item.created_at)}
               </div>
-              <textarea class="note-input" id="note-${item.id}" placeholder="거부 사유 (선택)"></textarea>
+              <textarea class="note-input" id="note-${item.id}" placeholder="거부 사유 (선택)" aria-label="거부 사유"></textarea>
               <div class="pending-card-actions mt-16">
                 <button class="btn btn-success btn-sm" onclick="approve(${item.id})">✓ 승인</button>
                 <button class="btn btn-danger btn-sm" onclick="reject(${item.id})">✗ 거부</button>
@@ -377,7 +378,7 @@
                 }
                 const cls = ws.status === 'recognized' ? 'status-recognized' : ws.status === 'unrecognized' ? 'status-unrecognized' : 'status-ongoing';
                 const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
-                const daysHtml = ws.days.map(d => `<span class="day-chip" onclick="deleteDay(${d.id},'${d.date}')" title="클릭하여 삭제">${formatDate(d.date)}</span>`).join('');
+                const daysHtml = ws.days.map(d => `<button type="button" class="day-chip" onclick="deleteDay(${d.id},'${d.date}')" title="클릭하여 삭제" aria-label="${formatDate(d.date)} 출석 삭제">${formatDate(d.date)}</button>`).join('');
                 return `<td title="${ws.days.map(d => d.date).join(', ')}">
                   <div class="week-cell">
                     <span class="week-count">${ws.count}일</span>
