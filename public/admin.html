@@ -50,7 +50,7 @@
   <div class="admin-container">
     <!-- Summary -->
     <div class="summary-grid" id="summaryCards">
-      <div class="summary-card"><div class="label">전체 멤버</div><div class="value" id="statTotal">-</div></div>
+      <div class="summary-card"><div class="label">전체 사용자</div><div class="value" id="statTotal">-</div></div>
       <div class="summary-card"><div class="label">대기 중인 신청</div><div class="value" id="statPending">-</div></div>
       <div class="summary-card"><div class="label">위험 (3주 미달)</div><div class="value warning" id="statAtRisk">-</div></div>
       <div class="summary-card"><div class="label">박탈 대상 (4주↑)</div><div class="value danger" id="statRevoke">-</div></div>
@@ -63,7 +63,7 @@
         <span class="admin-badge-pending" id="pendingBadge" style="display:none">0</span>
       </button>
       <button class="tab-btn" data-tab="attendance">출석 현황</button>
-      <button class="tab-btn" data-tab="members">멤버 관리</button>
+      <button class="tab-btn" data-tab="members">사용자 관리</button>
     </div>
 
     <!-- Tab: 대기 요청 -->
@@ -87,10 +87,10 @@
       <div id="statsContent"><div class="empty-state"><div class="icon">📊</div><p>불러오는 중...</p></div></div>
     </div>
 
-    <!-- Tab: 멤버 관리 -->
+    <!-- Tab: 사용자 관리 -->
     <div class="tab-pane" id="tabMembers">
       <div class="section-header">
-        <span class="section-title">멤버 추가</span>
+        <span class="section-title">사용자 추가</span>
       </div>
       <div class="card" style="margin-bottom:24px">
         <div class="form-row">
@@ -110,10 +110,10 @@
         <span class="section-title">수동 출석 추가</span>
       </div>
       <div class="card" style="margin-bottom:24px">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">멤버가 직접 신청하지 못한 경우 관리자가 직접 출석 처리합니다.</p>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">사용자가 직접 신청하지 못한 경우 관리자가 직접 출석 처리합니다.</p>
         <div class="form-row">
           <div class="form-group" style="margin-bottom:0">
-            <label>멤버 선택</label>
+            <label>사용자 선택</label>
             <select id="manualMember" class="form-control">
               <option value="">-- 선택 --</option>
             </select>
@@ -127,7 +127,7 @@
       </div>
 
       <div class="section-header mt-16">
-        <span class="section-title">멤버 목록</span>
+        <span class="section-title">사용자 목록</span>
         <button class="btn btn-ghost btn-sm" onclick="loadMemberTable()">새로고침</button>
       </div>
       <div id="memberTableWrapper"></div>
@@ -330,7 +330,7 @@
         const { weeks, stats } = await res.json();
 
         if (stats.length === 0) {
-          container.innerHTML = `<div class="empty-state"><div class="icon">📊</div><p>등록된 멤버가 없습니다.</p></div>`;
+          container.innerHTML = `<div class="empty-state"><div class="icon">📊</div><p>등록된 사용자가 없습니다.</p></div>`;
           return;
         }
 
@@ -338,7 +338,7 @@
         const thead = `
           <thead>
             <tr>
-              <th class="sticky" style="min-width:130px">멤버</th>
+              <th class="sticky" style="min-width:130px">사용자</th>
               ${weeks.map(w => `<th style="min-width:90px">${w.label}</th>`).join('')}
               <th style="min-width:80px">누적 미달</th>
             </tr>
@@ -432,7 +432,7 @@
         });
 
         if (members.length === 0) {
-          wrapper.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>등록된 멤버가 없습니다.</p></div>`;
+          wrapper.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>등록된 사용자가 없습니다.</p></div>`;
           return;
         }
 
@@ -480,7 +480,7 @@
         if (!res.ok) throw new Error(data.error);
         document.getElementById('newMemberName').value = '';
         document.getElementById('newMemberSeat').value = '';
-        showToast(`${name} 멤버가 추가되었습니다.`, 'success');
+        showToast(`${name} 사용자가 추가되었습니다.`, 'success');
         loadMemberTable();
         loadSummary();
       } catch (err) { showToast(err.message, 'error'); }
@@ -557,11 +557,11 @@
     }
 
     async function deleteMember(id, name) {
-      if (!confirm(`${name}을(를) 완전히 삭제하시겠습니까?\n해당 멤버의 출석 기록도 모두 삭제됩니다.`)) return;
+      if (!confirm(`${name}을(를) 완전히 삭제하시겠습니까?\n해당 사용자의 출석 기록도 모두 삭제됩니다.`)) return;
       try {
         const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error((await res.json()).error);
-        showToast(`${name} 멤버가 삭제되었습니다.`, 'success');
+        showToast(`${name} 사용자가 삭제되었습니다.`, 'success');
         loadMemberTable();
         loadSummary();
       } catch (err) { showToast(err.message || '오류가 발생했습니다.', 'error'); }
@@ -587,7 +587,7 @@
     async function addManual() {
       const memberId = document.getElementById('manualMember').value;
       const date = document.getElementById('manualDate').value;
-      if (!memberId || !date) return showToast('멤버와 날짜를 선택해주세요.', 'error');
+      if (!memberId || !date) return showToast('사용자와 날짜를 선택해주세요.', 'error');
 
       try {
         const res = await fetch('/api/checkins/manual', {
