@@ -104,7 +104,7 @@ app.put('/api/members/:id', async (req, res) => {
 app.post('/api/checkin', upload.single('photo'), async (req, res) => {
   const { member_id, checkin_date } = req.body;
   if (!member_id || !checkin_date) return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
-  if (checkin_date > getTodayKR()) return res.status(400).json({ error: '미래 날짜로는 출석 신청이 불가능합니다.' });
+  if (checkin_date !== getTodayKR()) return res.status(400).json({ error: '당일 날짜로만 출석 신청이 가능합니다.' });
   try {
     const photo_path = await savePhoto(req.file);
     const checkin = await db.addCheckin(parseInt(member_id), checkin_date, photo_path);
