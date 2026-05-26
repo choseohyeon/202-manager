@@ -368,6 +368,9 @@
                 if (!ws) {
                   return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span></div></td>`;
                 }
+                if (ws.status === 'ongoing' && ws.count === 0) {
+                  return `<td><div class="week-cell"><span class="week-status status-ongoing">진행중</span></div></td>`;
+                }
                 const cls = ws.status === 'recognized' ? 'status-recognized' : ws.status === 'unrecognized' ? 'status-unrecognized' : 'status-ongoing';
                 const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
                 const daysHtml = ws.days.map(d => `<span class="day-chip" onclick="deleteDay(${d.id},'${d.date}')" title="클릭하여 삭제">${formatDate(d.date)}</span>`).join('');
