@@ -42,6 +42,10 @@ async function getSQL() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(member_id, checkin_date)
     )`;
+    await _sql`CREATE TABLE IF NOT EXISTS holidays (
+      id SERIAL PRIMARY KEY, date TEXT NOT NULL UNIQUE,
+      note TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
+    )`;
     _pgReady = true;
   }
   return _sql;
@@ -171,6 +175,48 @@ async function getApprovedCheckins() {
   return d.checkins.filter(c => c.status === 'approved').sort((a, b) => a.checkin_date.localeCompare(b.checkin_date));
 }
 
+async function getHolidays() {
+  if (isCloud) {
+    const sql = await getSQL();
+    return await sql`SELECT * FROM holidays ORDER BY date`;
+  }
+  const d = loadJSON();
+  return (d.holidays || []).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+async function addHoliday(date, note = '') {
+  if (isCloud) {
+    const sql = await getSQL();
+    try {
+      const r = await sql`INSERT INTO holidays(date,note) VALUES(${date},${note}) RETURNING *`;
+      return r[0];
+    } catch (e) {
+      if (e.code === '23505') throw new Error('이미 등록된 날짜입니다.');
+      throw e;
+    }
+  }
+  const d = loadJSON();
+  if (!d.holidays) d.holidays = [];
+  if (d.holidays.find(h => h.date === date)) throw new Error('이미 등록된 날짜입니다.');
+  if (!d._seq.holidays) d._seq.holidays = 0;
+  const holiday = { id: ++d._seq.holidays, date, note, created_at: nowStr() };
+  d.holidays.push(holiday);
+  saveJSON(d);
+  return holiday;
+}
+
+async function deleteHoliday(id) {
+  if (isCloud) {
+    const sql = await getSQL();
+    await sql`DELETE FROM holidays WHERE id=${id}`;
+    return;
+  }
+  const d = loadJSON();
+  if (!d.holidays) return;
+  d.holidays = d.holidays.filter(h => h.id !== id);
+  saveJSON(d);
+}
+
 async function deleteMember(id) {
   if (isCloud) {
     const sql = await getSQL();
@@ -184,4 +230,4 @@ async function deleteMember(id) {
   saveJSON(d);
 }
 
-module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins };
+module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins, getHolidays, addHoliday, deleteHoliday };

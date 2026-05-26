@@ -42,6 +42,16 @@ function photoSrc(p) {
   return p.startsWith('http') ? p : `/uploads/${p}`;
 }
 
+function getWeekDates(weekStart) {
+  const dates = [];
+  const d = new Date(weekStart + 'T00:00:00');
+  for (let i = 0; i < 7; i++) {
+    const c = new Date(d); c.setDate(c.getDate() + i);
+    dates.push(c.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+
 function getWeekStart(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDay();
@@ -139,8 +149,10 @@ app.get('/api/stats', async (req, res) => {
   try {
     const members = await db.getMembers(false);
     const approved = await db.getApprovedCheckins();
-    const byMW = {}, weekSet = new Set();
+    const holidays = await db.getHolidays();
+    const holidaySet = new Set(holidays.map(h => h.date));
 
+    const byMW = {}, weekSet = new Set();
     for (const c of approved) {
       const week = getWeekStart(c.checkin_date);
       weekSet.add(week);
@@ -156,10 +168,15 @@ app.get('/api/stats', async (req, res) => {
       const weekStats = sortedWeeks.map(week => {
         const days = byMW[`${member.id}_${week}`] || [];
         const complete = isWeekComplete(week);
-        const status = !complete ? 'ongoing' : days.length >= 4 ? 'recognized' : 'unrecognized';
-        return { week, label: formatWeekLabel(week), count: days.length, days, status, isCurrentWeek: week === currentWeek };
+        const hasHoliday = getWeekDates(week).some(d => holidaySet.has(d));
+        let status;
+        if (hasHoliday) status = 'exempted';
+        else if (!complete) status = 'ongoing';
+        else if (days.length >= 4) status = 'recognized';
+        else status = 'unrecognized';
+        return { week, label: formatWeekLabel(week), count: days.length, days, status, isCurrentWeek: week === currentWeek, hasHoliday };
       });
-      const completed = weekStats.filter(w => w.status !== 'ongoing');
+      const completed = weekStats.filter(w => w.status !== 'ongoing' && w.status !== 'exempted');
       const unrecognizedCount = completed.filter(w => w.status === 'unrecognized').length;
       return { ...member, weekStats, unrecognizedCount, isAtRisk: unrecognizedCount === 3, shouldRevoke: unrecognizedCount >= 4 };
     });
@@ -170,6 +187,25 @@ app.get('/api/stats', async (req, res) => {
 
 app.delete('/api/members/:id', async (req, res) => {
   try { await db.deleteMember(parseInt(req.params.id)); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Holidays ─────────────────────────────────────────────
+
+app.get('/api/holidays', async (req, res) => {
+  try { res.json(await db.getHolidays()); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/holidays', async (req, res) => {
+  const { date, note } = req.body;
+  if (!date) return res.status(400).json({ error: '날짜를 입력해주세요.' });
+  try { res.json(await db.addHoliday(date, note || '')); }
+  catch (e) { res.status(400).json({ error: e.message }); }
+});
+
+app.delete('/api/holidays/:id', async (req, res) => {
+  try { await db.deleteHoliday(parseInt(req.params.id)); res.json({ success: true }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 

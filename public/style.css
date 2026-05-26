@@ -359,6 +359,7 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 .status-unrecognized { background: var(--warning-bg); color: var(--warning); }
 .status-ongoing { background: #dbeafe; color: #2563eb; }
 .status-empty { background: var(--gray-bg); color: var(--gray); }
+.status-exempted { background: #ede9fe; color: #7c3aed; }
 
 .member-name { font-weight: 700; }
 .member-seat { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }

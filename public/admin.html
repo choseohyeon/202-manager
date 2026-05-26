@@ -126,6 +126,26 @@
         <button class="btn btn-ghost btn-sm" onclick="loadMemberTable()">새로고침</button>
       </div>
       <div id="memberTableWrapper"></div>
+
+      <div class="section-header mt-24">
+        <span class="section-title">공휴일 관리</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadHolidays()">새로고침</button>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">공휴일이 포함된 주는 출석 인정 기준 없이 자동으로 <span style="color:#7c3aed;font-weight:600">면제</span> 처리됩니다.</p>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label>날짜</label>
+            <input type="date" id="holidayDate" class="form-control">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>메모 (선택)</label>
+            <input type="text" id="holidayNote" class="form-control" placeholder="예: 어린이날">
+          </div>
+          <button class="btn btn-primary" onclick="addHoliday()" style="align-self:flex-end">추가</button>
+        </div>
+      </div>
+      <div id="holidayList"></div>
     </div>
   </div>
 
@@ -145,7 +165,7 @@
         btn.classList.add('active');
         document.getElementById('tab' + capitalize(btn.dataset.tab)).classList.add('active');
         if (btn.dataset.tab === 'attendance') loadStats();
-        if (btn.dataset.tab === 'members') loadMemberTable();
+        if (btn.dataset.tab === 'members') { loadMemberTable(); loadHolidays(); }
       });
     });
 
@@ -345,6 +365,9 @@
 
               const weekCells = weeks.map(w => {
                 const ws = member.weekStats.find(s => s.week === w.week);
+                if (ws?.status === 'exempted') {
+                  return `<td><div class="week-cell"><span class="week-count" style="color:#7c3aed">-</span><span class="week-status status-exempted">면제</span></div></td>`;
+                }
                 if (!ws || ws.count === 0) {
                   return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span><span class="week-status status-empty">0일</span></div></td>`;
                 }
@@ -481,6 +504,58 @@
         loadMemberTable();
         loadSummary();
       } catch (err) { showToast(err.message || '오류가 발생했습니다.', 'error'); }
+    }
+
+    // ── Holidays ──────────────────────────────────────────
+    async function loadHolidays() {
+      const container = document.getElementById('holidayList');
+      try {
+        const res = await fetch('/api/holidays');
+        const holidays = await res.json();
+        if (holidays.length === 0) {
+          container.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:28px">📅</div><p>등록된 공휴일이 없습니다.</p></div>`;
+          return;
+        }
+        container.innerHTML = `
+          <table class="member-table">
+            <thead><tr><th>날짜</th><th>메모</th><th>액션</th></tr></thead>
+            <tbody>
+              ${holidays.map(h => `
+                <tr>
+                  <td style="font-weight:600">${formatDate(h.date)}</td>
+                  <td style="color:var(--text-secondary)">${h.note || '-'}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="deleteHoliday(${h.id})">삭제</button></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch { container.innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`; }
+    }
+
+    async function addHoliday() {
+      const date = document.getElementById('holidayDate').value;
+      const note = document.getElementById('holidayNote').value.trim();
+      if (!date) return showToast('날짜를 선택해주세요.', 'error');
+      try {
+        const res = await fetch('/api/holidays', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date, note })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        document.getElementById('holidayDate').value = '';
+        document.getElementById('holidayNote').value = '';
+        showToast('공휴일이 추가되었습니다.', 'success');
+        loadHolidays();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteHoliday(id) {
+      if (!confirm('이 공휴일을 삭제하시겠습니까?')) return;
+      try {
+        await fetch(`/api/holidays/${id}`, { method: 'DELETE' });
+        showToast('삭제되었습니다.');
+        loadHolidays();
+      } catch { showToast('오류가 발생했습니다.', 'error'); }
     }
 
     async function deleteMember(id, name) {
