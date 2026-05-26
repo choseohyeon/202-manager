@@ -230,4 +230,17 @@ async function deleteMember(id) {
   saveJSON(d);
 }
 
-module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins, getHolidays, addHoliday, deleteHoliday };
+async function getOldCheckinPhotos(daysOld) {
+  if (!isCloud) return [];
+  const sql = await getSQL();
+  const cutoff = new Date(Date.now() - daysOld * 24 * 60 * 60 * 1000).toISOString();
+  return await sql`SELECT id, photo_path FROM checkins WHERE created_at < ${cutoff} AND photo_path IS NOT NULL`;
+}
+
+async function clearCheckinPhoto(id) {
+  if (!isCloud) return;
+  const sql = await getSQL();
+  await sql`UPDATE checkins SET photo_path = NULL WHERE id = ${id}`;
+}
+
+module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins, getHolidays, addHoliday, deleteHoliday, getOldCheckinPhotos, clearCheckinPhoto };

@@ -221,6 +221,27 @@ app.post('/api/admin/verify', (req, res) => {
   res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
 });
 
+// ── Photo cleanup (cron: daily, delete photos older than 14 days) ────────────
+
+app.get('/api/cleanup', async (req, res) => {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return res.json({ skipped: true });
+  try {
+    const { del } = require('@vercel/blob');
+    const rows = await db.getOldCheckinPhotos(14);
+    let deleted = 0;
+    for (const row of rows) {
+      try {
+        await del(row.photo_path);
+        await db.clearCheckinPhoto(row.id);
+        deleted++;
+      } catch (e) {
+        console.error('cleanup error:', row.id, e.message);
+      }
+    }
+    res.json({ deleted, checked: rows.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Health check ─────────────────────────────────────────
 
 app.get('/api/health', (req, res) => {
