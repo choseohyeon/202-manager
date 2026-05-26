@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>열람실 출석 신청</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display: flex; flex-direction: column; }
+    .checkin-wrapper { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .card-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .card-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 28px; }
+    .today-chip {
+      display: inline-block;
+      background: #ede9fe;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 8px;
+    }
+    #result { margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="page-header-inner">
+      <h1>📚 열람실 출석 관리</h1>
+    </div>
+  </header>
+
+  <div class="checkin-wrapper">
+    <div class="container">
+      <div class="card">
+        <div class="card-title">출석 신청</div>
+        <div class="card-subtitle">자리번호와 날짜가 보이도록 사진을 찍어 제출해주세요.</div>
+
+        <form id="checkinForm">
+          <div class="form-group">
+            <label for="memberSelect">이름 선택</label>
+            <select id="memberSelect" class="form-control" required>
+              <option value="">-- 이름을 선택하세요 --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="checkinDate">
+              출석 날짜
+              <span class="hint">(최대 당일까지)</span>
+            </label>
+            <input type="date" id="checkinDate" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>
+              인증 사진
+              <span class="hint">(자리번호 + 날짜 표시)</span>
+            </label>
+            <div class="photo-upload-area" id="uploadArea">
+              <input type="file" id="photoInput" accept="image/*" capture="environment">
+              <img id="photoPreview" class="photo-preview" alt="미리보기">
+              <div id="uploadPlaceholder">
+                <span class="upload-icon">📷</span>
+                <p class="upload-text"><strong>사진 선택</strong> 또는 카메라 촬영</p>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+            출석 신청하기
+          </button>
+        </form>
+
+        <div id="result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = '';
+
+    // Set today's date as default and max
+    const dateInput = document.getElementById('checkinDate');
+    function getTodayStr() {
+      const now = new Date();
+      const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().split('T')[0];
+    }
+    const today = getTodayStr();
+    dateInput.value = today;
+    dateInput.max = today;
+
+    // Load members
+    async function loadMembers() {
+      const sel = document.getElementById('memberSelect');
+      try {
+        const res = await fetch('/api/members');
+        const members = await res.json();
+        members.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.id;
+          opt.textContent = `${m.name} (${m.seat_number}번 자리)`;
+          sel.appendChild(opt);
+        });
+      } catch {
+        showToast('멤버 목록을 불러올 수 없습니다.', 'error');
+      }
+    }
+    loadMembers();
+
+    // Photo preview
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        photoPreview.src = e.target.result;
+        photoPreview.style.display = 'block';
+        uploadPlaceholder.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Drag & drop
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file?.type.startsWith('image/')) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        photoInput.files = dt.files;
+        photoInput.dispatchEvent(new Event('change'));
+      }
+    });
+
+    // Submit
+    document.getElementById('checkinForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const memberId = document.getElementById('memberSelect').value;
+      const date = dateInput.value;
+      const file = photoInput.files[0];
+      const btn = document.getElementById('submitBtn');
+
+      if (!memberId) return showToast('이름을 선택해주세요.', 'error');
+      if (!file) return showToast('사진을 첨부해주세요.', 'error');
+
+      btn.disabled = true;
+      btn.textContent = '신청 중...';
+
+      const fd = new FormData();
+      fd.append('member_id', memberId);
+      fd.append('checkin_date', date);
+      fd.append('photo', file);
+
+      try {
+        const res = await fetch('/api/checkin', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+
+        document.getElementById('result').innerHTML = `
+          <div class="alert alert-success">
+            ✅ ${data.message}
+          </div>
+        `;
+        document.getElementById('checkinForm').reset();
+        photoPreview.style.display = 'none';
+        uploadPlaceholder.style.display = 'block';
+        dateInput.value = today;
+      } catch (err) {
+        document.getElementById('result').innerHTML = `
+          <div class="alert alert-error">⚠️ ${err.message}</div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '출석 신청하기';
+      }
+    });
+
+    // Toast
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type}`;
+      requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

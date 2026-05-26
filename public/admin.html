@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 대시보드</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
+    .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; }
+    .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="page-header-inner">
+      <h1>📚 열람실 관리자 대시보드</h1>
+      <span style="margin-left:auto;font-size:13px;color:var(--text-secondary)" id="lastUpdated"></span>
+    </div>
+  </header>
+
+  <div class="admin-container">
+    <!-- Summary -->
+    <div class="summary-grid" id="summaryCards">
+      <div class="summary-card"><div class="label">전체 멤버</div><div class="value" id="statTotal">-</div></div>
+      <div class="summary-card"><div class="label">대기 중인 신청</div><div class="value" id="statPending">-</div></div>
+      <div class="summary-card"><div class="label">위험 (3주 미달)</div><div class="value warning" id="statAtRisk">-</div></div>
+      <div class="summary-card"><div class="label">박탈 대상 (4주↑)</div><div class="value danger" id="statRevoke">-</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="pending">
+        대기 요청
+        <span class="admin-badge-pending" id="pendingBadge" style="display:none">0</span>
+      </button>
+      <button class="tab-btn" data-tab="attendance">출석 현황</button>
+      <button class="tab-btn" data-tab="members">멤버 관리</button>
+    </div>
+
+    <!-- Tab: 대기 요청 -->
+    <div class="tab-pane active" id="tabPending">
+      <div class="section-header">
+        <span class="section-title">승인 대기 중인 출석 신청</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadPending()">새로고침</button>
+      </div>
+      <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>불러오는 중...</p></div></div>
+    </div>
+
+    <!-- Tab: 출석 현황 -->
+    <div class="tab-pane" id="tabAttendance">
+      <div class="section-header">
+        <span class="section-title">주별 출석 현황</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadStats()">새로고침</button>
+      </div>
+      <div id="statsContent"><div class="empty-state"><div class="icon">📊</div><p>불러오는 중...</p></div></div>
+    </div>
+
+    <!-- Tab: 멤버 관리 -->
+    <div class="tab-pane" id="tabMembers">
+      <div class="section-header">
+        <span class="section-title">멤버 추가</span>
+      </div>
+      <div class="card" style="margin-bottom:24px">
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label>이름</label>
+            <input type="text" id="newMemberName" class="form-control" placeholder="이름 입력">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>자리번호</label>
+            <input type="number" id="newMemberSeat" class="form-control" placeholder="번호" min="1">
+          </div>
+          <button class="btn btn-primary" onclick="addMember()" style="align-self:flex-end">추가</button>
+        </div>
+      </div>
+
+      <div class="section-header mt-16">
+        <span class="section-title">수동 출석 추가</span>
+      </div>
+      <div class="card" style="margin-bottom:24px">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">멤버가 직접 신청하지 못한 경우 관리자가 직접 출석 처리합니다.</p>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label>멤버 선택</label>
+            <select id="manualMember" class="form-control">
+              <option value="">-- 선택 --</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>날짜</label>
+            <input type="date" id="manualDate" class="form-control">
+          </div>
+          <button class="btn btn-success" onclick="addManual()" style="align-self:flex-end">추가</button>
+        </div>
+      </div>
+
+      <div class="section-header mt-16">
+        <span class="section-title">멤버 목록</span>
+        <button class="btn btn-ghost btn-sm" onclick="loadMemberTable()">새로고침</button>
+      </div>
+      <div id="memberTableWrapper"></div>
+    </div>
+  </div>
+
+  <!-- Photo Modal -->
+  <div class="modal-overlay" id="photoModal" style="display:none" onclick="closeModal()">
+    <img id="modalImg" src="" alt="출석 사진" onclick="event.stopPropagation()">
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── Tab switching ─────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab' + capitalize(btn.dataset.tab)).classList.add('active');
+        if (btn.dataset.tab === 'attendance') loadStats();
+        if (btn.dataset.tab === 'members') loadMemberTable();
+      });
+    });
+
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // ── Toast ─────────────────────────────────────────
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ── Modal ─────────────────────────────────────────
+    function openModal(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('photoModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('photoModal').style.display = 'none'; }
+
+    // ── Date utils ────────────────────────────────────
+    function getTodayStr() {
+      const now = new Date();
+      const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      return kst.toISOString().split('T')[0];
+    }
+
+    function formatDate(str) {
+      if (!str) return '-';
+      const d = new Date(str + 'T00:00:00');
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      return `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
+    }
+
+    function timeAgo(isoStr) {
+      const diff = Date.now() - new Date(isoStr).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return '방금 전';
+      if (m < 60) return `${m}분 전`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}시간 전`;
+      return `${Math.floor(h / 24)}일 전`;
+    }
+
+    // ── Load Summary ──────────────────────────────────
+    async function loadSummary() {
+      try {
+        const [pendingRes, statsRes] = await Promise.all([
+          fetch('/api/checkins?status=pending'),
+          fetch('/api/stats')
+        ]);
+        const pending = await pendingRes.json();
+        const { stats } = await statsRes.json();
+
+        const activeMembers = stats.filter(s => s.is_active);
+        document.getElementById('statTotal').textContent = activeMembers.length;
+        document.getElementById('statPending').textContent = pending.length;
+        document.getElementById('statAtRisk').textContent = activeMembers.filter(s => s.isAtRisk).length;
+        document.getElementById('statRevoke').textContent = activeMembers.filter(s => s.shouldRevoke).length;
+
+        const badge = document.getElementById('pendingBadge');
+        if (pending.length > 0) {
+          badge.textContent = pending.length;
+          badge.style.display = 'inline';
+        } else {
+          badge.style.display = 'none';
+        }
+
+        document.getElementById('lastUpdated').textContent = `마지막 업데이트: ${new Date().toLocaleTimeString('ko-KR')}`;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ── Load Pending ──────────────────────────────────
+    async function loadPending() {
+      const container = document.getElementById('pendingList');
+      try {
+        const res = await fetch('/api/checkins?status=pending');
+        const items = await res.json();
+
+        if (items.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>대기 중인 신청이 없습니다.</p></div>`;
+          return;
+        }
+
+        container.innerHTML = `<div class="pending-grid">${items.map(item => `
+          <div class="pending-card" id="card-${item.id}">
+            <div class="pending-card-photo">
+              ${item.photo_path
+                ? `<img src="${item.photo_path}" alt="출석사진" onclick="openModal('${item.photo_path}')" loading="lazy">`
+                : `<span>📷 사진 없음</span>`
+              }
+            </div>
+            <div class="pending-card-body">
+              <div class="pending-card-name">${item.name}</div>
+              <div class="pending-card-meta">
+                ${item.seat_number}번 자리 · ${formatDate(item.checkin_date)} · ${timeAgo(item.created_at)}
+              </div>
+              <textarea class="note-input" id="note-${item.id}" placeholder="거부 사유 (선택)"></textarea>
+              <div class="pending-card-actions mt-16">
+                <button class="btn btn-success btn-sm" onclick="approve(${item.id})">✓ 승인</button>
+                <button class="btn btn-danger btn-sm" onclick="reject(${item.id})">✗ 거부</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteCheckin(${item.id})">삭제</button>
+              </div>
+            </div>
+          </div>
+        `).join('')}</div>`;
+      } catch {
+        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+      }
+    }
+
+    async function approve(id) {
+      const note = document.getElementById(`note-${id}`)?.value || '';
+      try {
+        const res = await fetch(`/api/checkins/${id}/approve`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
+        });
+        if (!res.ok) throw new Error();
+        document.getElementById(`card-${id}`)?.remove();
+        showToast('승인되었습니다.', 'success');
+        loadSummary();
+        if (document.querySelectorAll('.pending-card').length === 0) loadPending();
+      } catch { showToast('오류가 발생했습니다.', 'error'); }
+    }
+
+    async function reject(id) {
+      const note = document.getElementById(`note-${id}`)?.value || '';
+      try {
+        const res = await fetch(`/api/checkins/${id}/reject`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
+        });
+        if (!res.ok) throw new Error();
+        document.getElementById(`card-${id}`)?.remove();
+        showToast('거부되었습니다.', 'error');
+        loadSummary();
+        if (document.querySelectorAll('.pending-card').length === 0) loadPending();
+      } catch { showToast('오류가 발생했습니다.', 'error'); }
+    }
+
+    async function deleteCheckin(id) {
+      if (!confirm('이 신청을 삭제하시겠습니까?')) return;
+      try {
+        await fetch(`/api/checkins/${id}`, { method: 'DELETE' });
+        document.getElementById(`card-${id}`)?.remove();
+        showToast('삭제되었습니다.');
+        loadSummary();
+      } catch { showToast('오류가 발생했습니다.', 'error'); }
+    }
+
+    // ── Load Stats ────────────────────────────────────
+    async function loadStats() {
+      const container = document.getElementById('statsContent');
+      try {
+        const res = await fetch('/api/stats');
+        const { weeks, stats } = await res.json();
+
+        if (stats.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="icon">📊</div><p>등록된 멤버가 없습니다.</p></div>`;
+          return;
+        }
+
+        let revokeList = stats.filter(s => s.is_active && s.shouldRevoke);
+        let atRiskList = stats.filter(s => s.is_active && s.isAtRisk);
+
+        let alerts = '';
+        if (revokeList.length > 0) {
+          alerts += `<div class="alert alert-error">🚨 자리 박탈 대상: ${revokeList.map(s => `<strong>${s.name}</strong>`).join(', ')} (미인정 4주 이상)</div>`;
+        }
+        if (atRiskList.length > 0) {
+          alerts += `<div class="alert alert-warning">⚠️ 위험 경고: ${atRiskList.map(s => `<strong>${s.name}</strong>`).join(', ')} (미인정 3주 — 다음 주 미달 시 박탈)</div>`;
+        }
+
+        const thead = `
+          <thead>
+            <tr>
+              <th class="sticky" style="min-width:130px">멤버</th>
+              ${weeks.map(w => `<th style="min-width:90px">${w.label}</th>`).join('')}
+              <th style="min-width:80px">미인정</th>
+              <th style="min-width:80px">상태</th>
+            </tr>
+          </thead>
+        `;
+
+        const tbody = `
+          <tbody>
+            ${stats.map(member => {
+              const rowClass = !member.is_active ? 'inactive-member' : member.shouldRevoke ? 'row-revoke' : member.isAtRisk ? 'row-at-risk' : '';
+              const statusBadge = !member.is_active
+                ? `<span class="badge badge-gray">비활성</span>`
+                : member.shouldRevoke
+                  ? `<span class="badge badge-danger">박탈대상</span>`
+                  : member.isAtRisk
+                    ? `<span class="badge badge-warning">위험</span>`
+                    : `<span class="badge badge-success">정상</span>`;
+
+              const weekCells = weeks.map(w => {
+                const ws = member.weekStats.find(s => s.week === w.week);
+                if (!ws || ws.count === 0) {
+                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span><span class="week-status status-empty">0일</span></div></td>`;
+                }
+                const cls = ws.status === 'recognized' ? 'status-recognized' : ws.status === 'unrecognized' ? 'status-unrecognized' : 'status-ongoing';
+                const label = ws.status === 'recognized' ? '인정' : ws.status === 'unrecognized' ? '미인정' : '진행중';
+                const daysHtml = ws.days.map(d => `<span class="day-chip">${formatDate(d)}</span>`).join('');
+                return `<td title="${ws.days.join(', ')}">
+                  <div class="week-cell">
+                    <span class="week-count">${ws.count}일</span>
+                    <span class="week-status ${cls}">${label}</span>
+                    <div class="days-list">${daysHtml}</div>
+                  </div>
+                </td>`;
+              }).join('');
+
+              const unrecColor = member.unrecognizedCount >= 4 ? 'text-danger' : member.unrecognizedCount >= 3 ? 'text-warning' : '';
+
+              return `
+                <tr class="${rowClass}">
+                  <td class="sticky">
+                    <div class="member-name">${member.name}</div>
+                    <div class="member-seat">${member.seat_number}번 자리</div>
+                  </td>
+                  ${weekCells}
+                  <td><span class="unrecognized-count ${unrecColor}">${member.unrecognizedCount}</span></td>
+                  <td>${statusBadge}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        `;
+
+        container.innerHTML = `
+          ${alerts}
+          <div class="table-wrapper">
+            <table class="stats-table">${thead}${tbody}</table>
+          </div>
+          <p style="font-size:12px;color:var(--text-secondary);margin-top:12px">
+            * 인정 기준: 주 4일 이상 출석 / 미인정 4주 누적 시 자리 박탈
+          </p>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+        console.error(err);
+      }
+    }
+
+    // ── Member Management ─────────────────────────────
+    async function loadMemberTable() {
+      const wrapper = document.getElementById('memberTableWrapper');
+      const manualSel = document.getElementById('manualMember');
+
+      try {
+        const res = await fetch('/api/members?all=true');
+        const members = await res.json();
+
+        // Update manual dropdown
+        manualSel.innerHTML = '<option value="">-- 선택 --</option>';
+        members.filter(m => m.is_active).forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.id;
+          opt.textContent = `${m.name} (${m.seat_number}번)`;
+          manualSel.appendChild(opt);
+        });
+
+        if (members.length === 0) {
+          wrapper.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>등록된 멤버가 없습니다.</p></div>`;
+          return;
+        }
+
+        wrapper.innerHTML = `
+          <table class="member-table">
+            <thead>
+              <tr>
+                <th>이름</th><th>자리번호</th><th>상태</th><th>가입일</th><th>액션</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${members.map(m => `
+                <tr class="${m.is_active ? '' : 'inactive-member'}">
+                  <td id="name-display-${m.id}" style="font-weight:600">${m.name}</td>
+                  <td>${m.seat_number}번</td>
+                  <td>${m.is_active ? '<span class="badge badge-success">활성</span>' : '<span class="badge badge-gray">비활성</span>'}</td>
+                  <td style="font-size:13px;color:var(--text-secondary)">${m.created_at?.split(' ')[0] || '-'}</td>
+                  <td style="display:flex;gap:6px">
+                    ${m.is_active
+                      ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, '${m.name}')">비활성화</button>`
+                      : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
+                    }
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch {
+        wrapper.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+      }
+    }
+
+    async function addMember() {
+      const name = document.getElementById('newMemberName').value.trim();
+      const seat = document.getElementById('newMemberSeat').value;
+      if (!name || !seat) return showToast('이름과 자리번호를 입력해주세요.', 'error');
+
+      try {
+        const res = await fetch('/api/members', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, seat_number: parseInt(seat) })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        document.getElementById('newMemberName').value = '';
+        document.getElementById('newMemberSeat').value = '';
+        showToast(`${name} 멤버가 추가되었습니다.`, 'success');
+        loadMemberTable();
+        loadSummary();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deactivateMember(id, name) {
+      if (!confirm(`${name}을(를) 비활성화 하시겠습니까?\n자리 박탈 처리 시 사용합니다.`)) return;
+      try {
+        const res = await fetch(`/api/members/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: 0 })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error);
+        }
+        showToast('비활성화되었습니다.', 'success');
+        loadMemberTable();
+        loadSummary();
+      } catch (err) { showToast(err.message || '오류가 발생했습니다.', 'error'); }
+    }
+
+    async function activateMember(id) {
+      try {
+        const res = await fetch(`/api/members/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: 1 })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error);
+        }
+        showToast('활성화되었습니다.', 'success');
+        loadMemberTable();
+        loadSummary();
+      } catch (err) { showToast(err.message || '오류가 발생했습니다.', 'error'); }
+    }
+
+    async function addManual() {
+      const memberId = document.getElementById('manualMember').value;
+      const date = document.getElementById('manualDate').value;
+      if (!memberId || !date) return showToast('멤버와 날짜를 선택해주세요.', 'error');
+
+      try {
+        const res = await fetch('/api/checkins/manual', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: memberId, checkin_date: date })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        showToast(data.message, 'success');
+        document.getElementById('manualMember').value = '';
+        document.getElementById('manualDate').value = '';
+        loadSummary();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // ── Init ──────────────────────────────────────────
+    document.getElementById('manualDate').value = getTodayStr();
+    document.getElementById('manualDate').max = getTodayStr();
+
+    loadSummary();
+    loadPending();
+    setInterval(loadSummary, 30000); // auto-refresh summary every 30s
+  </script>
+</body>
+</html>
