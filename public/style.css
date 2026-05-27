@@ -159,11 +159,10 @@ input[type="date"].form-control {
   box-sizing: border-box !important;
   -webkit-appearance: none;
   appearance: none;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
 }
-input[type="date"].form-control::-webkit-datetime-edit-fields-wrapper { padding: 10px 0; }
+input[type="date"].form-control::-webkit-datetime-edit-fields-wrapper { padding: 0; }
 input[type="date"].form-control::-webkit-datetime-edit { padding: 0; }
+input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0; margin: 0; }
 
 /* ── Photo Upload ───────────────────────── */
 
