@@ -539,5 +539,6 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   .admin-container { padding: 16px 12px 60px; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
   .form-row { grid-template-columns: 1fr; }
+  .form-row > .btn { width: 100%; justify-content: center; align-self: auto; }
   .tabs { flex-direction: column; }
 }
