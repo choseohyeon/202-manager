@@ -759,6 +759,7 @@
       overlay.style.display = 'none';
       document.getElementById('manualDate').value = getTodayStr();
       document.getElementById('manualDate').max = getTodayStr();
+      document.getElementById('holidayDate').value = getTodayStr();
       loadSummary();
       loadPending();
       const _interval = setInterval(loadSummary, 30000);
