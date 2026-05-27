@@ -157,7 +157,9 @@ input[type="date"].form-control {
   width: stretch !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+  text-align: left;
 }
+input[type="date"].form-control::-webkit-date-and-time-value { text-align: left; }
 
 /* ── Photo Upload ───────────────────────── */
 
