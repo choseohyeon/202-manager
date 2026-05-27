@@ -462,32 +462,25 @@
         }
 
         wrapper.innerHTML = `
-          <div class="table-wrapper">
-          <table class="member-table">
-            <thead>
-              <tr>
-                <th>이름</th><th>자리번호</th><th>상태</th><th>액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${members.map(m => `
-                <tr class="${m.is_active ? '' : 'inactive-member'}">
-                  <td style="font-weight:600">${m.name}</td>
-                  <td>${m.seat_number}번</td>
-                  <td>${m.is_active ? '<span class="badge badge-success">활성</span>' : '<span class="badge badge-gray">비활성</span>'}</td>
-                  <td>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap">
-                    ${m.is_active
-                      ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, '${m.name}')">비활성화</button>`
-                      : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
-                    }
-                    <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, '${m.name}')">삭제</button>
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <div class="member-list">
+            ${members.map(m => `
+              <div class="member-row ${m.is_active ? '' : 'inactive-member'}">
+                <div class="member-row-info">
+                  <div>
+                    <div class="member-row-name">${m.name}</div>
+                    <div class="member-row-seat">${m.seat_number}번 자리</div>
+                  </div>
+                  ${m.is_active ? '<span class="badge badge-success">활성</span>' : '<span class="badge badge-gray">비활성</span>'}
+                </div>
+                <div class="member-row-actions">
+                  ${m.is_active
+                    ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, '${m.name}')">비활성화</button>`
+                    : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
+                  }
+                  <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, '${m.name}')">삭제</button>
+                </div>
+              </div>
+            `).join('')}
           </div>
         `;
       } catch {

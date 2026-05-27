@@ -411,6 +411,39 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 20px; }
 
+/* ── Member List ────────────────────────── */
+
+.member-list {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.member-row:last-child { border-bottom: none; }
+
+.member-row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.member-row-name { font-weight: 700; font-size: 15px; }
+.member-row-seat { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+.member-row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
 /* ── Modal (photo lightbox) ─────────────── */
 
 .modal-overlay {
