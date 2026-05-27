@@ -158,6 +158,8 @@ input[type="date"].form-control {
   max-width: 100% !important;
   box-sizing: border-box !important;
   text-align: left;
+  height: 46px;
+  line-height: 1;
 }
 input[type="date"].form-control::-webkit-date-and-time-value { text-align: left; }
 
@@ -551,4 +553,5 @@ input[type="date"].form-control::-webkit-date-and-time-value { text-align: left;
   .form-row { grid-template-columns: minmax(0, 1fr); }
   .form-row > .btn { width: 100%; justify-content: center; align-self: auto; }
   .tabs { flex-direction: column; }
+  input[type="date"].form-control { height: auto; line-height: inherit; }
 }
