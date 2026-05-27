@@ -755,6 +755,20 @@
       return res;
     }
 
+    function syncDateInputHeights() {
+      if (!window.matchMedia('(pointer: fine)').matches) return;
+      const probe = document.createElement('select');
+      probe.className = 'form-control';
+      probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none';
+      document.body.appendChild(probe);
+      const h = probe.offsetHeight;
+      document.body.removeChild(probe);
+      if (!h) return;
+      document.querySelectorAll('input[type="date"].form-control').forEach(el => {
+        el.style.height = h + 'px';
+      });
+    }
+
     function showDashboard() {
       overlay.style.display = 'none';
       document.getElementById('manualDate').value = getTodayStr();
@@ -764,6 +778,7 @@
       loadPending();
       const _interval = setInterval(loadSummary, 30000);
       window.addEventListener('beforeunload', () => clearInterval(_interval));
+      setTimeout(syncDateInputHeights, 0);
     }
 
     document.getElementById('loginForm').addEventListener('submit', async e => {
