@@ -120,7 +120,8 @@ body {
 .btn-ghost { background: transparent; color: var(--gray); border: 1px solid var(--border); }
 .btn-ghost:hover:not(:disabled) { background: var(--gray-bg); }
 
-.btn-sm { padding: 6px 12px; font-size: 13px; min-height: 44px; }
+.btn-sm { padding: 6px 12px; font-size: 13px; min-height: 36px; }
+@media (pointer: coarse) { .btn-sm { min-height: 44px; } }
 .btn-block { width: 100%; justify-content: center; }
 .btn-lg { padding: 14px 24px; font-size: 16px; }
 
@@ -388,9 +389,6 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   border-collapse: collapse;
   background: var(--white);
   font-size: 14px;
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
 }
 
 .member-table th {

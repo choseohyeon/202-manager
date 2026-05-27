@@ -462,30 +462,33 @@
         }
 
         wrapper.innerHTML = `
+          <div class="table-wrapper">
           <table class="member-table">
             <thead>
               <tr>
-                <th>이름</th><th>자리번호</th><th>상태</th><th>가입일</th><th>액션</th>
+                <th>이름</th><th>자리번호</th><th>상태</th><th>액션</th>
               </tr>
             </thead>
             <tbody>
               ${members.map(m => `
                 <tr class="${m.is_active ? '' : 'inactive-member'}">
-                  <td id="name-display-${m.id}" style="font-weight:600">${m.name}</td>
+                  <td style="font-weight:600">${m.name}</td>
                   <td>${m.seat_number}번</td>
                   <td>${m.is_active ? '<span class="badge badge-success">활성</span>' : '<span class="badge badge-gray">비활성</span>'}</td>
-                  <td style="font-size:13px;color:var(--text-secondary)">${m.created_at?.split(' ')[0] || '-'}</td>
-                  <td style="display:flex;gap:6px">
+                  <td>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap">
                     ${m.is_active
                       ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, '${m.name}')">비활성화</button>`
                       : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
                     }
                     <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, '${m.name}')">삭제</button>
+                    </div>
                   </td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
+          </div>
         `;
       } catch {
         wrapper.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
@@ -540,6 +543,7 @@
           return;
         }
         container.innerHTML = `
+          <div class="table-wrapper">
           <table class="member-table">
             <thead><tr><th>날짜</th><th>메모</th><th>액션</th></tr></thead>
             <tbody>
@@ -551,7 +555,8 @@
                 </tr>
               `).join('')}
             </tbody>
-          </table>`;
+          </table>
+          </div>`;
       } catch { container.innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`; }
     }
 
