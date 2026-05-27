@@ -540,7 +540,7 @@ input[type="date"].form-control { display: block !important; width: 100% !import
 @media (max-width: 600px) {
   .admin-container { padding: 16px 12px 60px; }
   .summary-grid { grid-template-columns: repeat(2, 1fr); }
-  .form-row { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: minmax(0, 1fr); overflow: hidden; }
   .form-row > .btn { width: 100%; justify-content: center; align-self: auto; }
   .tabs { flex-direction: column; }
 }
