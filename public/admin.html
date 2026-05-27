@@ -27,15 +27,15 @@
 </head>
 <body>
   <!-- 로그인 오버레이 -->
-  <div id="loginOverlay">
+  <div id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div class="login-card">
-      <h2>🔒 관리자 로그인</h2>
+      <h2 id="loginTitle">🔒 관리자 로그인</h2>
       <p>열람실 출석 관리자 전용 페이지입니다.</p>
       <form id="loginForm">
         <input type="password" id="adminPassword" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" aria-label="비밀번호" style="margin-bottom:12px">
         <button type="submit" class="btn btn-primary btn-block">로그인</button>
       </form>
-      <div class="login-error" id="loginError"></div>
+      <div class="login-error" id="loginError" role="alert"></div>
     </div>
   </div>
 
@@ -94,11 +94,11 @@
       <div class="card" style="margin-bottom:24px">
         <div class="form-row">
           <div class="form-group" style="margin-bottom:0">
-            <label>이름</label>
+            <label for="newMemberName">이름</label>
             <input type="text" id="newMemberName" class="form-control" placeholder="이름 입력">
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label>자리번호</label>
+            <label for="newMemberSeat">자리번호</label>
             <input type="number" id="newMemberSeat" class="form-control" placeholder="번호" min="1">
           </div>
           <button class="btn btn-primary" onclick="addMember()" style="align-self:flex-end">추가</button>
@@ -118,7 +118,7 @@
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label>날짜</label>
+            <label for="manualDate">날짜</label>
             <input type="date" id="manualDate" class="form-control">
           </div>
           <button class="btn btn-success" onclick="addManual()" style="align-self:flex-end">추가</button>
@@ -139,11 +139,11 @@
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">공휴일이 포함된 주는 출석 인정 기준 없이 자동으로 <span style="color:var(--exempted);font-weight:600">면제</span> 처리됩니다.</p>
         <div class="form-row">
           <div class="form-group" style="margin-bottom:0">
-            <label>날짜</label>
+            <label for="holidayDate">날짜</label>
             <input type="date" id="holidayDate" class="form-control">
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label>메모 (선택)</label>
+            <label for="holidayNote">메모 (선택)</label>
             <input type="text" id="holidayNote" class="form-control" placeholder="예: 어린이날">
           </div>
           <button class="btn btn-primary" onclick="addHoliday()" style="align-self:flex-end">추가</button>
@@ -178,7 +178,7 @@
     <img id="modalImg" src="" alt="출석 사진" onclick="event.stopPropagation()">
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     // ── Tab switching ─────────────────────────────────
@@ -195,6 +195,12 @@
     });
 
     function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // ── XSS escape ───────────────────────────────────
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
     // ── Toast ─────────────────────────────────────────
     function showToast(msg, type = '') {
@@ -287,7 +293,7 @@
               }
             </div>
             <div class="pending-card-body">
-              <div class="pending-card-name">${item.name}</div>
+              <div class="pending-card-name">${escapeHtml(item.name)}</div>
               <div class="pending-card-meta">
                 ${item.seat_number}번 자리 · ${formatDate(item.checkin_date)} · ${timeAgo(item.created_at)}
               </div>
@@ -413,7 +419,7 @@
               return `
                 <tr class="${rowClass}">
                   <td class="sticky">
-                    <div class="member-name">${member.name}</div>
+                    <div class="member-name">${escapeHtml(member.name)}</div>
                     <div class="member-seat">${member.seat_number}번 자리</div>
                   </td>
                   ${weekCells}
@@ -467,17 +473,17 @@
               <div class="member-row ${m.is_active ? '' : 'inactive-member'}">
                 <div class="member-row-info">
                   <div>
-                    <div class="member-row-name">${m.name}</div>
+                    <div class="member-row-name">${escapeHtml(m.name)}</div>
                     <div class="member-row-seat">${m.seat_number}번 자리</div>
                   </div>
                   ${m.is_active ? '<span class="badge badge-success">활성</span>' : '<span class="badge badge-gray">비활성</span>'}
                 </div>
                 <div class="member-row-actions">
                   ${m.is_active
-                    ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, '${m.name}')">비활성화</button>`
+                    ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, ${JSON.stringify(m.name)})">비활성화</button>`
                     : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
                   }
-                  <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, '${m.name}')">삭제</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, ${JSON.stringify(m.name)})">삭제</button>
                 </div>
               </div>
             `).join('')}
@@ -542,7 +548,7 @@
                 <div class="member-row-info">
                   <div>
                     <div class="member-row-name">${formatDate(h.date)}</div>
-                    ${h.note ? `<div class="member-row-seat">${h.note}</div>` : ''}
+                    ${h.note ? `<div class="member-row-seat">${escapeHtml(h.note)}</div>` : ''}
                   </div>
                 </div>
                 <div class="member-row-actions">
@@ -804,6 +810,19 @@
 
     if (checkSession()) {
       showDashboard();
+    } else {
+      document.getElementById('adminPassword').focus();
+      document.addEventListener('keydown', function(e) {
+        if (overlay.style.display === 'none') return;
+        if (e.key !== 'Tab') return;
+        const focusable = [...overlay.querySelectorAll('input:not([disabled]), button:not([disabled])')];
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault(); first.focus();
+        }
+      });
     }
   </script>
 </body>
