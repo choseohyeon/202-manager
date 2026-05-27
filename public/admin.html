@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
   <style>
     .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; font-family: inherit; }
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; justify-content: center; }
-    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 5px 10px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; font-family: inherit; line-height: 1.5; }
+    .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 5px 10px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background-color .15s, color .15s; border: none; font-family: inherit; line-height: 1.5; }
     .day-chip:hover { background: var(--danger-bg); color: var(--danger); }
 
     #loginOverlay {
@@ -68,7 +68,7 @@
     <!-- Tab: 대기 요청 -->
     <div class="tab-pane active" id="tabPending" role="tabpanel" aria-labelledby="tab-btn-pending">
       <div class="section-header">
-        <span class="section-title">승인 대기 중인 출석 신청</span>
+        <h2 class="section-title">승인 대기 중인 출석 신청</h2>
         <button class="btn btn-ghost btn-sm" onclick="loadPending()">새로고침</button>
       </div>
       <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>불러오는 중...</p></div></div>
@@ -77,7 +77,7 @@
     <!-- Tab: 출석 현황 -->
     <div class="tab-pane" id="tabAttendance" role="tabpanel" aria-labelledby="tab-btn-attendance">
       <div class="section-header">
-        <span class="section-title">주별 출석 현황</span>
+        <h2 class="section-title">주별 출석 현황</h2>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📥 Excel 다운로드</button>
           <button class="btn btn-ghost btn-sm" onclick="loadStats()">새로고침</button>
@@ -89,7 +89,7 @@
     <!-- Tab: 사용자 관리 -->
     <div class="tab-pane" id="tabMembers" role="tabpanel" aria-labelledby="tab-btn-members">
       <div class="section-header">
-        <span class="section-title">사용자 추가</span>
+        <h2 class="section-title">사용자 추가</h2>
       </div>
       <div class="card" style="margin-bottom:24px">
         <div class="form-row">
@@ -106,13 +106,13 @@
       </div>
 
       <div class="section-header mt-16">
-        <span class="section-title">수동 출석 추가</span>
+        <h2 class="section-title">수동 출석 추가</h2>
       </div>
       <div class="card" style="margin-bottom:24px">
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">사용자가 직접 신청하지 못한 경우 관리자가 직접 출석 처리합니다.</p>
         <div class="form-row">
           <div class="form-group" style="margin-bottom:0">
-            <label>사용자 선택</label>
+            <label for="manualMember">사용자 선택</label>
             <select id="manualMember" class="form-control">
               <option value="">-- 선택 --</option>
             </select>
@@ -126,13 +126,13 @@
       </div>
 
       <div class="section-header mt-16">
-        <span class="section-title">사용자 목록</span>
+        <h2 class="section-title">사용자 목록</h2>
         <button class="btn btn-ghost btn-sm" onclick="loadMemberTable()">새로고침</button>
       </div>
       <div id="memberTableWrapper"></div>
 
       <div class="section-header mt-24">
-        <span class="section-title">공휴일 관리</span>
+        <h2 class="section-title">공휴일 관리</h2>
         <button class="btn btn-ghost btn-sm" onclick="loadHolidays()">새로고침</button>
       </div>
       <div class="card" style="margin-bottom:16px">
@@ -152,7 +152,7 @@
       <div id="holidayList"></div>
 
       <div class="section-header mt-24">
-        <span class="section-title">관리자 비밀번호 변경</span>
+        <h2 class="section-title">관리자 비밀번호 변경</h2>
       </div>
       <div class="card">
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">변경 후 다음 로그인부터 새 비밀번호가 적용됩니다.</p>
@@ -787,7 +787,11 @@
       document.getElementById('holidayDate').value = getTodayStr();
       loadSummary();
       loadPending();
-      const _interval = setInterval(loadSummary, 30000);
+      let _interval = setInterval(loadSummary, 30000);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) { clearInterval(_interval); _interval = null; }
+        else { loadSummary(); _interval = setInterval(loadSummary, 30000); }
+      });
       window.addEventListener('beforeunload', () => clearInterval(_interval));
       setTimeout(syncDateInputHeights, 0);
     }

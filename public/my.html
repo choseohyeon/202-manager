@@ -65,7 +65,7 @@
 
   <div class="admin-container">
     <div class="section-header">
-      <span class="section-title">주별 출석 현황</span>
+      <h2 class="section-title">주별 출석 현황</h2>
       <span style="font-size:12px;color:var(--text-secondary)" id="lastUpdated"></span>
     </div>
 
@@ -98,12 +98,12 @@
         // Table
         const thead = `<thead>
           <tr>
-            <th class="sticky" style="min-width:110px">이름</th>
+            <th class="sticky" scope="col" style="min-width:110px">이름</th>
             ${weeks.map(w => {
               const isCurrent = w.week === weeks[weeks.length - 1]?.week;
-              return `<th style="min-width:80px${isCurrent ? ';color:var(--primary)' : ''}">${w.label}${isCurrent ? '<br><span style="font-size:10px;font-weight:500">이번 주</span>' : ''}</th>`;
+              return `<th scope="col" style="min-width:80px${isCurrent ? ';color:var(--primary)' : ''}">${w.label}${isCurrent ? '<br><span style="font-size:10px;font-weight:500">이번 주</span>' : ''}</th>`;
             }).join('')}
-            <th style="min-width:70px">누적 미달</th>
+            <th scope="col" style="min-width:70px">누적 미달</th>
           </tr>
         </thead>`;
 
