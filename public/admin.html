@@ -175,7 +175,7 @@
 
   <!-- Photo Modal -->
   <div class="modal-overlay" id="photoModal" style="display:none" role="dialog" aria-modal="true" aria-label="출석 사진" onclick="closeModal()">
-    <img id="modalImg" src="" alt="출석 사진" onclick="event.stopPropagation()">
+    <img id="modalImg" src="" alt="출석 사진" tabindex="-1" onclick="event.stopPropagation()">
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -212,10 +212,15 @@
 
     // ── Modal ─────────────────────────────────────────
     function openModal(src) {
-      document.getElementById('modalImg').src = src;
+      const img = document.getElementById('modalImg');
+      img.src = src;
       document.getElementById('photoModal').style.display = 'flex';
+      img.focus();
     }
     function closeModal() { document.getElementById('photoModal').style.display = 'none'; }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('photoModal').style.display !== 'none') closeModal();
+    });
 
     // ── Date utils ────────────────────────────────────
     function getTodayStr() {
