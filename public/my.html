@@ -79,6 +79,11 @@
   <script>
     const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     function formatWeekLabel(w) { return w.label; }
 
     function showToast(msg, type = '') {
@@ -129,7 +134,7 @@
 
           return `<tr>
             <td class="sticky">
-              <div class="member-name-cell">${member.name}</div>
+              <div class="member-name-cell">${escapeHtml(member.name)}</div>
               <div class="member-seat-cell">${member.seat_number}번 자리</div>
             </td>
             ${weekCells}
