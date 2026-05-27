@@ -536,19 +536,20 @@
           return;
         }
         container.innerHTML = `
-          <div class="table-wrapper">
-          <table class="member-table">
-            <thead><tr><th>날짜</th><th>메모</th><th>액션</th></tr></thead>
-            <tbody>
-              ${holidays.map(h => `
-                <tr>
-                  <td style="font-weight:600">${formatDate(h.date)}</td>
-                  <td style="color:var(--text-secondary)">${h.note || '-'}</td>
-                  <td><button class="btn btn-danger btn-sm" onclick="deleteHoliday(${h.id})">삭제</button></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+          <div class="member-list">
+            ${holidays.map(h => `
+              <div class="member-row">
+                <div class="member-row-info">
+                  <div>
+                    <div class="member-row-name">${formatDate(h.date)}</div>
+                    ${h.note ? `<div class="member-row-seat">${h.note}</div>` : ''}
+                  </div>
+                </div>
+                <div class="member-row-actions">
+                  <button class="btn btn-danger btn-sm" onclick="deleteHoliday(${h.id})">삭제</button>
+                </div>
+              </div>
+            `).join('')}
           </div>`;
       } catch { container.innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`; }
     }
