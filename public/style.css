@@ -158,8 +158,6 @@ input[type="date"].form-control {
   max-width: 100% !important;
   box-sizing: border-box !important;
   text-align: left;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
 }
 input[type="date"].form-control::-webkit-date-and-time-value { text-align: left; }
 
