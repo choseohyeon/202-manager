@@ -240,7 +240,7 @@
     async function loadSummary() {
       try {
         const [pendingRes, statsRes] = await Promise.all([
-          fetch('/api/checkins?status=pending'),
+          authFetch('/api/checkins?status=pending'),
           fetch('/api/stats')
         ]);
         const pending = await pendingRes.json();
@@ -270,7 +270,7 @@
     async function loadPending() {
       const container = document.getElementById('pendingList');
       try {
-        const res = await fetch('/api/checkins?status=pending');
+        const res = await authFetch('/api/checkins?status=pending');
         const items = await res.json();
 
         if (items.length === 0) {
@@ -308,7 +308,7 @@
     async function approve(id) {
       const note = document.getElementById(`note-${id}`)?.value || '';
       try {
-        const res = await fetch(`/api/checkins/${id}/approve`, {
+        const res = await authFetch(`/api/checkins/${id}/approve`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
         });
         if (!res.ok) throw new Error();
@@ -322,7 +322,7 @@
     async function reject(id) {
       const note = document.getElementById(`note-${id}`)?.value || '';
       try {
-        const res = await fetch(`/api/checkins/${id}/reject`, {
+        const res = await authFetch(`/api/checkins/${id}/reject`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
         });
         if (!res.ok) throw new Error();
@@ -336,7 +336,7 @@
     async function deleteCheckin(id) {
       if (!confirm('이 신청을 삭제하시겠습니까?')) return;
       try {
-        await fetch(`/api/checkins/${id}`, { method: 'DELETE' });
+        await authFetch(`/api/checkins/${id}`, { method: 'DELETE' });
         document.getElementById(`card-${id}`)?.remove();
         showToast('삭제되었습니다.');
         loadSummary();
@@ -498,7 +498,7 @@
       if (!name || !seat) return showToast('이름과 자리번호를 입력해주세요.', 'error');
 
       try {
-        const res = await fetch('/api/members', {
+        const res = await authFetch('/api/members', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, seat_number: parseInt(seat) })
         });
         const data = await res.json();
@@ -514,7 +514,7 @@
     async function deactivateMember(id, name) {
       if (!confirm(`${name}을(를) 비활성화 하시겠습니까?\n자리 박탈 처리 시 사용합니다.`)) return;
       try {
-        const res = await fetch(`/api/members/${id}`, {
+        const res = await authFetch(`/api/members/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ is_active: 0 })
@@ -560,7 +560,7 @@
       const note = document.getElementById('holidayNote').value.trim();
       if (!date) return showToast('날짜를 선택해주세요.', 'error');
       try {
-        const res = await fetch('/api/holidays', {
+        const res = await authFetch('/api/holidays', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date, note })
         });
         const data = await res.json();
@@ -575,7 +575,7 @@
     async function deleteHoliday(id) {
       if (!confirm('이 공휴일을 삭제하시겠습니까?')) return;
       try {
-        await fetch(`/api/holidays/${id}`, { method: 'DELETE' });
+        await authFetch(`/api/holidays/${id}`, { method: 'DELETE' });
         showToast('삭제되었습니다.');
         loadHolidays();
       } catch { showToast('오류가 발생했습니다.', 'error'); }
@@ -584,7 +584,7 @@
     async function deleteMember(id, name) {
       if (!confirm(`${name}을(를) 완전히 삭제하시겠습니까?\n해당 사용자의 출석 기록도 모두 삭제됩니다.`)) return;
       try {
-        const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+        const res = await authFetch(`/api/members/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error((await res.json()).error);
         showToast(`${name} 사용자가 삭제되었습니다.`, 'success');
         loadMemberTable();
@@ -594,7 +594,7 @@
 
     async function activateMember(id) {
       try {
-        const res = await fetch(`/api/members/${id}`, {
+        const res = await authFetch(`/api/members/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ is_active: 1 })
@@ -615,7 +615,7 @@
       if (!memberId || !date) return showToast('사용자와 날짜를 선택해주세요.', 'error');
 
       try {
-        const res = await fetch('/api/checkins/manual', {
+        const res = await authFetch('/api/checkins/manual', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: memberId, checkin_date: date })
         });
         const data = await res.json();
@@ -631,7 +631,7 @@
     async function deleteDay(id, date) {
       if (!confirm(`${formatDate(date)} 출석을 삭제하시겠습니까?`)) return;
       try {
-        const res = await fetch(`/api/checkins/${id}`, { method: 'DELETE' });
+        const res = await authFetch(`/api/checkins/${id}`, { method: 'DELETE' });
         if (!res.ok) throw new Error();
         showToast('출석이 삭제되었습니다.', 'success');
         loadStats();
@@ -724,7 +724,7 @@
       if (next !== confirm) return showToast('새 비밀번호가 일치하지 않습니다.', 'error');
       if (next.length < 4) return showToast('비밀번호는 4자 이상이어야 합니다.', 'error');
       try {
-        const res = await fetch('/api/admin/change-password', {
+        const res = await authFetch('/api/admin/change-password', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ current, next })
         });
@@ -737,11 +737,23 @@
       } catch (err) { showToast(err.message, 'error'); }
     }
 
-    // ── Login ─────────────────────────────────────────
+    // ── Auth ──────────────────────────────────────────
     const overlay = document.getElementById('loginOverlay');
 
     function checkSession() {
-      return sessionStorage.getItem('admin_auth') === 'true';
+      return !!sessionStorage.getItem('admin_token');
+    }
+
+    async function authFetch(url, options = {}) {
+      const token = sessionStorage.getItem('admin_token');
+      const headers = { ...(options.headers || {}) };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(url, { ...options, headers });
+      if (res.status === 401) {
+        sessionStorage.removeItem('admin_token');
+        location.reload();
+      }
+      return res;
     }
 
     function showDashboard() {
@@ -767,7 +779,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
-        sessionStorage.setItem('admin_auth', 'true');
+        sessionStorage.setItem('admin_token', data.token);
         showDashboard();
       } catch (err) {
         errEl.textContent = err.message;

@@ -83,14 +83,14 @@ app.get('/api/members', async (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/members', async (req, res) => {
+app.post('/api/members', requireAuth, async (req, res) => {
   const { name, seat_number } = req.body;
   if (!name?.trim() || !seat_number) return res.status(400).json({ error: '이름과 자리번호를 입력해주세요.' });
   try { res.json(await db.addMember(name.trim(), parseInt(seat_number))); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 
-app.put('/api/members/:id', async (req, res) => {
+app.put('/api/members/:id', requireAuth, async (req, res) => {
   const { name, seat_number, is_active } = req.body;
   const updates = {};
   if (name !== undefined) updates.name = name;
@@ -113,29 +113,29 @@ app.post('/api/checkin', upload.single('photo'), async (req, res) => {
   } catch (e) { res.status(400).json({ error: e.message }); }
 });
 
-app.get('/api/checkins', async (req, res) => {
+app.get('/api/checkins', requireAuth, async (req, res) => {
   try {
     const checkins = await db.getCheckins(req.query.status || null);
     res.json(checkins.map(c => ({ ...c, photo_path: photoSrc(c.photo_path) })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/checkins/:id/approve', async (req, res) => {
+app.post('/api/checkins/:id/approve', requireAuth, async (req, res) => {
   try { await db.updateCheckinStatus(parseInt(req.params.id), 'approved', req.body.note || null); res.json({ success: true }); }
   catch (e) { res.status(404).json({ error: e.message }); }
 });
 
-app.post('/api/checkins/:id/reject', async (req, res) => {
+app.post('/api/checkins/:id/reject', requireAuth, async (req, res) => {
   try { await db.updateCheckinStatus(parseInt(req.params.id), 'rejected', req.body.note || null); res.json({ success: true }); }
   catch (e) { res.status(404).json({ error: e.message }); }
 });
 
-app.delete('/api/checkins/:id', async (req, res) => {
+app.delete('/api/checkins/:id', requireAuth, async (req, res) => {
   try { await db.deleteCheckin(parseInt(req.params.id)); res.json({ success: true }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/checkins/manual', async (req, res) => {
+app.post('/api/checkins/manual', requireAuth, async (req, res) => {
   const { member_id, checkin_date } = req.body;
   if (!member_id || !checkin_date) return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
   try {
@@ -188,7 +188,7 @@ app.get('/api/stats', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/members/:id', async (req, res) => {
+app.delete('/api/members/:id', requireAuth, async (req, res) => {
   try { await db.deleteMember(parseInt(req.params.id)); res.json({ success: true }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -200,19 +200,54 @@ app.get('/api/holidays', async (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/holidays', async (req, res) => {
+app.post('/api/holidays', requireAuth, async (req, res) => {
   const { date, note } = req.body;
   if (!date) return res.status(400).json({ error: '날짜를 입력해주세요.' });
   try { res.json(await db.addHoliday(date, note || '')); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 
-app.delete('/api/holidays/:id', async (req, res) => {
+app.delete('/api/holidays/:id', requireAuth, async (req, res) => {
   try { await db.deleteHoliday(parseInt(req.params.id)); res.json({ success: true }); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Admin auth ───────────────────────────────────────────
+
+async function getSessionSecret() {
+  let secret = await db.getSetting('session_secret');
+  if (!secret) {
+    secret = crypto.randomBytes(32).toString('hex');
+    await db.setSetting('session_secret', secret);
+  }
+  return secret;
+}
+
+function generateToken(secret) {
+  const ts = Date.now().toString();
+  const hmac = crypto.createHmac('sha256', secret).update(ts).digest('hex');
+  return `${ts}.${hmac}`;
+}
+
+function verifyToken(token, secret) {
+  try {
+    const [ts, hmac] = token.split('.');
+    const expected = crypto.createHmac('sha256', secret).update(ts).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(hmac, 'hex'), Buffer.from(expected, 'hex'))) return false;
+    if (Date.now() - parseInt(ts) > 24 * 60 * 60 * 1000) return false;
+    return true;
+  } catch { return false; }
+}
+
+async function requireAuth(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: '인증이 필요합니다.' });
+  try {
+    const secret = await getSessionSecret();
+    if (!verifyToken(auth.slice(7), secret)) return res.status(401).json({ error: '인증이 만료되었습니다. 다시 로그인해주세요.' });
+    next();
+  } catch (e) { res.status(500).json({ error: e.message }); }
+}
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -232,19 +267,16 @@ app.post('/api/admin/verify', async (req, res) => {
   const { password } = req.body;
   try {
     const stored = await db.getSetting('admin_password');
-    if (stored) {
-      if (verifyPassword(password, stored)) return res.json({ ok: true });
-      return res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
-    }
-    // 환경변수 폴백 (DB에 비밀번호 미설정 시)
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    if (!adminPassword) return res.status(500).json({ error: '서버 설정 오류' });
-    if (password === adminPassword) return res.json({ ok: true });
-    res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+    const valid = stored ? verifyPassword(password, stored) : password === process.env.ADMIN_PASSWORD;
+    if (!valid) return res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+    if (!stored && !process.env.ADMIN_PASSWORD) return res.status(500).json({ error: '서버 설정 오류' });
+    const secret = await getSessionSecret();
+    const token = generateToken(secret);
+    res.json({ ok: true, token });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/admin/change-password', async (req, res) => {
+app.post('/api/admin/change-password', requireAuth, async (req, res) => {
   const { current, next } = req.body;
   if (!current || !next) return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
   if (next.length < 4) return res.status(400).json({ error: '비밀번호는 4자 이상이어야 합니다.' });
