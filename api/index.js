@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const db = require('../db');
 
 const app = express();
@@ -213,12 +214,47 @@ app.delete('/api/holidays/:id', async (req, res) => {
 
 // ── Admin auth ───────────────────────────────────────────
 
-app.post('/api/admin/verify', (req, res) => {
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, stored) {
+  try {
+    const [salt, hash] = stored.split(':');
+    const candidate = crypto.scryptSync(password, salt, 64).toString('hex');
+    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'));
+  } catch { return false; }
+}
+
+app.post('/api/admin/verify', async (req, res) => {
   const { password } = req.body;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) return res.status(500).json({ error: '서버 설정 오류' });
-  if (password === adminPassword) return res.json({ ok: true });
-  res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+  try {
+    const stored = await db.getSetting('admin_password');
+    if (stored) {
+      if (verifyPassword(password, stored)) return res.json({ ok: true });
+      return res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+    }
+    // 환경변수 폴백 (DB에 비밀번호 미설정 시)
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) return res.status(500).json({ error: '서버 설정 오류' });
+    if (password === adminPassword) return res.json({ ok: true });
+    res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/change-password', async (req, res) => {
+  const { current, next } = req.body;
+  if (!current || !next) return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
+  if (next.length < 4) return res.status(400).json({ error: '비밀번호는 4자 이상이어야 합니다.' });
+  try {
+    const stored = await db.getSetting('admin_password');
+    const valid = stored ? verifyPassword(current, stored) : current === process.env.ADMIN_PASSWORD;
+    if (!valid) return res.status(401).json({ error: '현재 비밀번호가 틀렸습니다.' });
+    await db.setSetting('admin_password', hashPassword(next));
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Photo cleanup (cron: daily, delete photos older than 14 days) ────────────

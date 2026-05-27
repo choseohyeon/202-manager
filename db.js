@@ -46,6 +46,9 @@ async function getSQL() {
       id SERIAL PRIMARY KEY, date TEXT NOT NULL UNIQUE,
       note TEXT, created_at TIMESTAMPTZ DEFAULT NOW()
     )`;
+    await _sql`CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY, value TEXT NOT NULL
+    )`;
     _pgReady = true;
   }
   return _sql;
@@ -237,10 +240,32 @@ async function getOldCheckinPhotos(daysOld) {
   return await sql`SELECT id, photo_path FROM checkins WHERE created_at < ${cutoff} AND photo_path IS NOT NULL`;
 }
 
+async function getSetting(key) {
+  if (isCloud) {
+    const sql = await getSQL();
+    const r = await sql`SELECT value FROM settings WHERE key=${key}`;
+    return r[0]?.value || null;
+  }
+  const d = loadJSON();
+  return (d.settings || {})[key] || null;
+}
+
+async function setSetting(key, value) {
+  if (isCloud) {
+    const sql = await getSQL();
+    await sql`INSERT INTO settings(key,value) VALUES(${key},${value}) ON CONFLICT(key) DO UPDATE SET value=${value}`;
+    return;
+  }
+  const d = loadJSON();
+  if (!d.settings) d.settings = {};
+  d.settings[key] = value;
+  saveJSON(d);
+}
+
 async function clearCheckinPhoto(id) {
   if (!isCloud) return;
   const sql = await getSQL();
   await sql`UPDATE checkins SET photo_path = NULL WHERE id = ${id}`;
 }
 
-module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins, getHolidays, addHoliday, deleteHoliday, getOldCheckinPhotos, clearCheckinPhoto };
+module.exports = { getMembers, addMember, updateMember, deleteMember, addCheckin, getCheckins, updateCheckinStatus, deleteCheckin, getApprovedCheckins, getHolidays, addHoliday, deleteHoliday, getOldCheckinPhotos, clearCheckinPhoto, getSetting, setSetting };
