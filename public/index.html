@@ -39,10 +39,11 @@
 
         <form id="checkinForm">
           <div class="form-group">
-            <label for="memberSelect">이름 선택</label>
+            <label for="memberSelect">이름</label>
             <select id="memberSelect" class="form-control" required disabled>
               <option value="">불러오는 중...</option>
             </select>
+            <output id="memberDisplay" class="form-control" style="display:none;background:var(--gray-bg);font-weight:600;color:var(--text)"></output>
           </div>
 
           <input type="hidden" id="checkinDate">
@@ -98,19 +99,37 @@
 
 
     // Load members
+    const urlMemberId = new URLSearchParams(window.location.search).get('m');
+
     async function loadMembers() {
       const sel = document.getElementById('memberSelect');
+      const display = document.getElementById('memberDisplay');
       try {
         const res = await fetch('/api/members');
         const members = await res.json();
-        sel.innerHTML = '<option value="">-- 이름을 선택하세요 --</option>';
-        members.forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m.id;
-          opt.textContent = `${m.name} (${m.seat_number}번 자리)`;
-          sel.appendChild(opt);
-        });
-        sel.disabled = false;
+
+        if (urlMemberId) {
+          const member = members.find(m => String(m.id) === String(urlMemberId));
+          if (member) {
+            sel.innerHTML = `<option value="${member.id}">${member.name}</option>`;
+            sel.value = member.id;
+            sel.style.display = 'none';
+            display.textContent = `${member.name} (${member.seat_number}번 자리)`;
+            display.style.display = 'block';
+          } else {
+            sel.innerHTML = '<option value="">사용자를 찾을 수 없습니다.</option>';
+            showToast('유효하지 않은 링크입니다.', 'error');
+          }
+        } else {
+          sel.innerHTML = '<option value="">-- 이름을 선택하세요 --</option>';
+          members.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = `${m.name} (${m.seat_number}번 자리)`;
+            sel.appendChild(opt);
+          });
+          sel.disabled = false;
+        }
       } catch {
         sel.innerHTML = '<option value="">불러오기 실패 (새로고침 해주세요)</option>';
         showToast('사용자 목록을 불러올 수 없습니다.', 'error');
