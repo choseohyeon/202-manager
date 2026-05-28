@@ -485,8 +485,7 @@
                 </div>
                 <div class="member-row-actions">
                   ${m.is_active
-                    ? `<button class="btn btn-ghost btn-sm" onclick="copyCheckinLink(${m.id}, ${JSON.stringify(m.name)})">링크 복사</button>
-                       <button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, ${JSON.stringify(m.name)})">비활성화</button>`
+                    ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, ${JSON.stringify(m.name)})">비활성화</button>`
                     : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
                   }
                   <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, ${JSON.stringify(m.name)})">삭제</button>
@@ -497,17 +496,6 @@
         `;
       } catch {
         wrapper.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
-      }
-    }
-
-    function copyCheckinLink(id, name) {
-      const url = `${location.origin}/?m=${id}`;
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(url)
-          .then(() => showToast(`${name} 개인 링크 복사됨`, 'success'))
-          .catch(() => window.prompt(`${name} 개인 링크 — 복사해서 공유하세요:`, url));
-      } else {
-        window.prompt(`${name} 개인 링크 — 복사해서 공유하세요:`, url);
       }
     }
 
