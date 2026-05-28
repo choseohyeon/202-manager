@@ -502,7 +502,28 @@
 
     function copyCheckinLink(id, name) {
       const url = `${location.origin}/?m=${id}`;
-      navigator.clipboard.writeText(url).then(() => showToast(`${name} 개인 링크 복사됨`, 'success'));
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url)
+          .then(() => showToast(`${name} 개인 링크 복사됨`, 'success'))
+          .catch(() => fallbackCopy(url, name));
+      } else {
+        fallbackCopy(url, name);
+      }
+    }
+
+    function fallbackCopy(url, name) {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(`${name} 개인 링크 복사됨`, 'success');
+      } catch {
+        showToast('복사 실패 — 직접 복사해주세요: ' + url, 'error');
+      }
+      document.body.removeChild(ta);
     }
 
     async function addMember() {
