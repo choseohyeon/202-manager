@@ -37,15 +37,29 @@ manager/
 
 ## 페이지별 역할
 
-- `/` (index.html): 사용자가 이름 선택 + 사진 업로드로 출석 신청
-- `/my.html`: 전체 사용자 주별 출석 현황 공개 열람
-- `/admin.html`: 관리자 전용 — 신청 승인/거부, 수동 출석 추가, 사용자 관리, 공휴일 설정
+- `/` (index.html): 사용자가 이름 선택 + 사진 업로드로 출석 신청. 헤더 타이틀: "열람실 출석 신청"
+- `/my.html`: 전체 사용자 주별 출석 현황 공개 열람. 헤더 타이틀: "열람실 출석 현황"
+- `/admin.html`: 관리자 전용 — 신청 승인/거부, 수동 출석 추가, 사용자 관리, 공휴일 설정, 사용자 접근 비밀번호 관리
 
 ## 인증 방식
 
+### 관리자 인증
 - 관리자 비밀번호 → HMAC-SHA256 토큰 발급 (24시간 유효)
 - `sessionStorage`에 토큰 저장, 모든 관리자 API에 `requireAuth` 미들웨어
 - 비밀번호는 `scrypt` 해시로 DB에 저장
+
+### 사용자 접근 비밀번호 (멤버 인증)
+- 관리자가 admin.html에서 사용자 접근 비밀번호를 설정하면 index.html·my.html 접근 시 비밀번호 입력 필요
+- 인증 성공 시 HMAC-SHA256 토큰 발급 (30일 유효), `localStorage`에 저장 → 카톡 인앱브라우저에서도 유지
+- DB 설정 키: `member_password`(해시), `member_session_secret`(토큰 서명용)
+- `requireMemberAuth` 미들웨어: `member_password` 미설정 시 통과, 관리자 토큰도 허용
+- 관련 API:
+  - `GET /api/member/status` — 비밀번호 설정 여부 반환 (`{ required: true/false }`)
+  - `POST /api/member/verify` — 비밀번호 검증 후 토큰 발급
+  - `POST /api/admin/set-member-password` — 비밀번호 설정/해제 (관리자 전용)
+- 적용 엔드포인트: `GET /api/members`, `POST /api/checkin`, `GET /api/stats`
+- 오버레이 표시 방식: 토큰 없으면 즉시 오버레이 표시 → 백그라운드에서 `/api/member/status` 확인 → 불필요하면 자동 닫힘 (지연 없음)
+- admin.html "사용자 접근 비밀번호" 섹션에서 현재 설정 상태(🔒/🔓) 확인 가능
 
 ## 출석 인정 기준
 
@@ -65,6 +79,7 @@ manager/
 - **다크모드 불필요**: 이 프로젝트에서는 다크모드 지원 안 함
 - **Safari 날짜 입력 높이**: `input[type="date"]`가 Safari에서 다른 `.form-control`보다 높게 렌더링됨. CSS로 해결 불가 → JS로 해결: `syncDateInputHeights()` 함수가 `select.form-control` 높이를 측정해 date input에 동일하게 적용 (`pointer: fine` 기기만)
 - **사진 자동 삭제**: Vercel cron이 매일 새벽 2시에 `/api/cleanup` 호출 → 14일 지난 사진 Blob에서 삭제
+- **사용자 인증 토큰 저장소**: `localStorage` 사용 (카톡 인앱브라우저에서 `sessionStorage`는 탭 닫히면 초기화되므로 부적합)
 
 ## 로컬 개발
 
