@@ -155,7 +155,8 @@
         <h2 class="section-title">사용자 접근 비밀번호</h2>
       </div>
       <div class="card" style="margin-bottom:24px">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">설정 시 출석 신청·현황 페이지에 비밀번호 입력이 필요합니다. 비우면 잠금이 해제됩니다.</p>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">설정 시 출석 신청·현황 페이지에 비밀번호 입력이 필요합니다. 비우면 잠금이 해제됩니다.</p>
+        <div id="memberPwStatus" style="margin-bottom:16px;font-size:13px;font-weight:600"></div>
         <div class="form-group">
           <label for="memberAccessPw">새 비밀번호 (4자 이상)</label>
           <input type="password" id="memberAccessPw" class="form-control" placeholder="비밀번호 입력">
@@ -742,6 +743,20 @@
     }
 
     // ── Member Password ───────────────────────────────
+    async function loadMemberPasswordStatus() {
+      const el = document.getElementById('memberPwStatus');
+      try {
+        const data = await fetch('/api/member/status').then(r => r.json());
+        if (data.required) {
+          el.innerHTML = '🔒 현재 상태: <span style="color:var(--success)">비밀번호 설정됨</span>';
+        } else {
+          el.innerHTML = '🔓 현재 상태: <span style="color:var(--text-secondary)">잠금 해제 (누구나 접근 가능)</span>';
+        }
+      } catch {
+        el.textContent = '';
+      }
+    }
+
     async function setMemberPassword() {
       const pw = document.getElementById('memberAccessPw').value;
       if (!pw) return showToast('비밀번호를 입력해주세요.', 'error');
@@ -753,18 +768,20 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         document.getElementById('memberAccessPw').value = '';
-        showToast('멤버 비밀번호가 설정되었습니다.', 'success');
+        showToast('사용자 비밀번호가 설정되었습니다.', 'success');
+        loadMemberPasswordStatus();
       } catch (err) { showToast(err.message, 'error'); }
     }
 
     async function clearMemberPassword() {
-      if (!confirm('멤버 접근 잠금을 해제하시겠습니까?\n누구나 출석 신청·현황 페이지에 접근할 수 있게 됩니다.')) return;
+      if (!confirm('사용자 접근 잠금을 해제하시겠습니까?\n누구나 출석 신청·현황 페이지에 접근할 수 있게 됩니다.')) return;
       try {
         const res = await authFetch('/api/admin/set-member-password', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: '' })
         });
         if (!res.ok) throw new Error();
-        showToast('멤버 잠금이 해제되었습니다.', 'success');
+        showToast('사용자 잠금이 해제되었습니다.', 'success');
+        loadMemberPasswordStatus();
       } catch { showToast('오류가 발생했습니다.', 'error'); }
     }
 
@@ -830,6 +847,7 @@
       document.getElementById('holidayDate').value = getTodayStr();
       loadSummary();
       loadPending();
+      loadMemberPasswordStatus();
       let _interval = setInterval(loadSummary, 30000);
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) { clearInterval(_interval); _interval = null; }
