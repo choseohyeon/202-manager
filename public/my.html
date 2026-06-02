@@ -72,6 +72,21 @@
     </div>
   </div>
 
+  <!-- 멤버 인증 오버레이 -->
+  <div id="memberAuthOverlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;flex-direction:column;align-items:center;justify-content:center;" role="dialog" aria-modal="true" aria-labelledby="memberAuthTitle">
+    <div style="width:100%;max-width:360px;padding:0 24px">
+      <div class="card" style="text-align:center">
+        <div class="card-title" id="memberAuthTitle">🔒 열람실 출석 관리</div>
+        <div class="card-subtitle">접근하려면 비밀번호를 입력해주세요.</div>
+        <div class="form-group" style="text-align:left;margin-bottom:8px">
+          <input type="password" id="memberPwInput" class="form-control" placeholder="비밀번호" autocomplete="current-password">
+        </div>
+        <div id="memberPwError" style="color:var(--danger);font-size:13px;margin-bottom:12px;min-height:18px"></div>
+        <button class="btn btn-primary btn-block" onclick="submitMemberAuth()">확인</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <script>
@@ -90,9 +105,57 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    // ── 멤버 인증 ──────────────────────────────────────
+    function memberFetch(url, options = {}) {
+      const token = localStorage.getItem('memberToken');
+      const headers = { ...(options.headers || {}) };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      return fetch(url, { ...options, headers }).then(res => {
+        if (res.status === 401) {
+          localStorage.removeItem('memberToken');
+          location.reload();
+        }
+        return res;
+      });
+    }
+
+    async function checkMemberAuth() {
+      if (localStorage.getItem('memberToken')) return;
+      const status = await fetch('/api/member/status').then(r => r.json()).catch(() => ({ required: false }));
+      if (!status.required) return;
+      const overlay = document.getElementById('memberAuthOverlay');
+      overlay.style.display = 'flex';
+      document.getElementById('memberPwInput').focus();
+      await new Promise(resolve => { window._memberAuthResolve = resolve; });
+    }
+
+    async function submitMemberAuth() {
+      const pw = document.getElementById('memberPwInput').value;
+      const errEl = document.getElementById('memberPwError');
+      errEl.textContent = '';
+      try {
+        const res = await fetch('/api/member/verify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        if (data.token) localStorage.setItem('memberToken', data.token);
+        document.getElementById('memberAuthOverlay').style.display = 'none';
+        if (window._memberAuthResolve) { window._memberAuthResolve(); window._memberAuthResolve = null; }
+      } catch (err) {
+        errEl.textContent = err.message;
+        document.getElementById('memberPwInput').value = '';
+        document.getElementById('memberPwInput').focus();
+      }
+    }
+
+    document.getElementById('memberPwInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitMemberAuth();
+    });
+
     async function load() {
       try {
-        const res = await fetch('/api/stats');
+        const res = await memberFetch('/api/stats');
         const { weeks, stats } = await res.json();
         const active = stats.filter(m => m.is_active);
 
@@ -152,7 +215,7 @@
       }
     }
 
-    load();
+    checkMemberAuth().then(() => load());
   </script>
 </body>
 </html>

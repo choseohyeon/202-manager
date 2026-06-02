@@ -152,6 +152,21 @@
       <div id="holidayList"></div>
 
       <div class="section-header mt-24">
+        <h2 class="section-title">멤버 접근 비밀번호</h2>
+      </div>
+      <div class="card" style="margin-bottom:24px">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">설정 시 출석 신청·현황 페이지에 비밀번호 입력이 필요합니다. 비우면 잠금이 해제됩니다.</p>
+        <div class="form-group">
+          <label for="memberAccessPw">새 비밀번호 (4자 이상)</label>
+          <input type="password" id="memberAccessPw" class="form-control" placeholder="비밀번호 입력">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="setMemberPassword()">저장</button>
+          <button class="btn btn-ghost" onclick="clearMemberPassword()">잠금 해제</button>
+        </div>
+      </div>
+
+      <div class="section-header mt-24">
         <h2 class="section-title">관리자 비밀번호 변경</h2>
       </div>
       <div class="card">
@@ -253,7 +268,7 @@
       try {
         const [pendingRes, statsRes] = await Promise.all([
           authFetch('/api/checkins?status=pending'),
-          fetch('/api/stats')
+          authFetch('/api/stats')
         ]);
         const pending = await pendingRes.json();
         const { stats } = await statsRes.json();
@@ -359,7 +374,7 @@
     async function loadStats() {
       const container = document.getElementById('statsContent');
       try {
-        const res = await fetch('/api/stats');
+        const res = await authFetch('/api/stats');
         const { weeks, stats } = await res.json();
 
         if (stats.length === 0) {
@@ -456,7 +471,7 @@
       const manualSel = document.getElementById('manualMember');
 
       try {
-        const res = await fetch('/api/members?all=true');
+        const res = await authFetch('/api/members?all=true');
         const members = await res.json();
 
         // Update manual dropdown
@@ -671,7 +686,7 @@
         });
       }
       try {
-        const res = await fetch('/api/stats');
+        const res = await authFetch('/api/stats');
         const { weeks, stats } = await res.json();
         const activeStats = stats.filter(m => m.is_active);
         if (activeStats.length === 0) return showToast('내보낼 데이터가 없습니다.', 'error');
@@ -724,6 +739,33 @@
         showToast('내보내기에 실패했습니다.', 'error');
         console.error(err);
       }
+    }
+
+    // ── Member Password ───────────────────────────────
+    async function setMemberPassword() {
+      const pw = document.getElementById('memberAccessPw').value;
+      if (!pw) return showToast('비밀번호를 입력해주세요.', 'error');
+      if (pw.length < 4) return showToast('비밀번호는 4자 이상이어야 합니다.', 'error');
+      try {
+        const res = await authFetch('/api/admin/set-member-password', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        document.getElementById('memberAccessPw').value = '';
+        showToast('멤버 비밀번호가 설정되었습니다.', 'success');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function clearMemberPassword() {
+      if (!confirm('멤버 접근 잠금을 해제하시겠습니까?\n누구나 출석 신청·현황 페이지에 접근할 수 있게 됩니다.')) return;
+      try {
+        const res = await authFetch('/api/admin/set-member-password', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: '' })
+        });
+        if (!res.ok) throw new Error();
+        showToast('멤버 잠금이 해제되었습니다.', 'success');
+      } catch { showToast('오류가 발생했습니다.', 'error'); }
     }
 
     // ── Change Password ───────────────────────────────

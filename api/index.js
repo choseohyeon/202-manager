@@ -78,7 +78,7 @@ function getTodayKR() {
 
 // ── Members ──────────────────────────────────────────────
 
-app.get('/api/members', async (req, res) => {
+app.get('/api/members', requireMemberAuth, async (req, res) => {
   try { res.json(await db.getMembers(req.query.all !== 'true')); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -102,7 +102,7 @@ app.put('/api/members/:id', requireAuth, async (req, res) => {
 
 // ── Check-ins ────────────────────────────────────────────
 
-app.post('/api/checkin', upload.single('photo'), async (req, res) => {
+app.post('/api/checkin', requireMemberAuth, upload.single('photo'), async (req, res) => {
   const { member_id, checkin_date } = req.body;
   if (!member_id || !checkin_date) return res.status(400).json({ error: '필수 정보가 누락되었습니다.' });
   if (checkin_date !== getTodayKR()) return res.status(400).json({ error: '당일 날짜로만 출석 신청이 가능합니다.' });
@@ -146,7 +146,7 @@ app.post('/api/checkins/manual', requireAuth, async (req, res) => {
 
 // ── Stats ────────────────────────────────────────────────
 
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', requireMemberAuth, async (req, res) => {
   try {
     const members = await db.getMembers(false);
     const approved = await db.getApprovedCheckins();
@@ -239,6 +239,40 @@ function verifyToken(token, secret) {
   } catch { return false; }
 }
 
+async function getMemberSessionSecret() {
+  let secret = await db.getSetting('member_session_secret');
+  if (!secret) {
+    secret = crypto.randomBytes(32).toString('hex');
+    await db.setSetting('member_session_secret', secret);
+  }
+  return secret;
+}
+
+function verifyMemberToken(token, secret) {
+  try {
+    const [ts, hmac] = token.split('.');
+    const expected = crypto.createHmac('sha256', secret).update(ts).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(hmac, 'hex'), Buffer.from(expected, 'hex'))) return false;
+    if (Date.now() - parseInt(ts) > 30 * 24 * 60 * 60 * 1000) return false;
+    return true;
+  } catch { return false; }
+}
+
+async function requireMemberAuth(req, res, next) {
+  const memberPw = await db.getSetting('member_password');
+  if (!memberPw) return next();
+  const auth = req.headers['authorization'];
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'member_auth_required' });
+  const token = auth.slice(7);
+  try {
+    const adminSecret = await getSessionSecret();
+    if (verifyToken(token, adminSecret)) return next();
+    const memberSecret = await getMemberSessionSecret();
+    if (verifyMemberToken(token, memberSecret)) return next();
+    return res.status(401).json({ error: 'member_auth_required' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+}
+
 async function requireAuth(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: '인증이 필요합니다.' });
@@ -307,6 +341,41 @@ app.get('/api/cleanup', async (req, res) => {
       }
     }
     res.json({ deleted, checked: rows.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Member auth ───────────────────────────────────────────
+
+app.get('/api/member/status', async (req, res) => {
+  try {
+    const memberPw = await db.getSetting('member_password');
+    res.json({ required: !!memberPw });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/member/verify', async (req, res) => {
+  const { password } = req.body;
+  try {
+    const stored = await db.getSetting('member_password');
+    if (!stored) return res.json({ ok: true, token: null });
+    if (!verifyPassword(password, stored)) return res.status(401).json({ error: '비밀번호가 틀렸습니다.' });
+    const secret = await getMemberSessionSecret();
+    const ts = Date.now().toString();
+    const hmac = crypto.createHmac('sha256', secret).update(ts).digest('hex');
+    res.json({ ok: true, token: `${ts}.${hmac}` });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/set-member-password', requireAuth, async (req, res) => {
+  const { password } = req.body;
+  try {
+    if (!password || !password.trim()) {
+      await db.setSetting('member_password', '');
+      return res.json({ ok: true });
+    }
+    if (password.length < 4) return res.status(400).json({ error: '비밀번호는 4자 이상이어야 합니다.' });
+    await db.setSetting('member_password', hashPassword(password));
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
