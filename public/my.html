@@ -121,11 +121,11 @@
 
     async function checkMemberAuth() {
       if (localStorage.getItem('memberToken')) return;
-      const status = await fetch('/api/member/status').then(r => r.json()).catch(() => ({ required: false }));
-      if (!status.required) return;
       const overlay = document.getElementById('memberAuthOverlay');
       overlay.style.display = 'flex';
       document.getElementById('memberPwInput').focus();
+      const status = await fetch('/api/member/status').then(r => r.json()).catch(() => ({ required: true }));
+      if (!status.required) { overlay.style.display = 'none'; return; }
       await new Promise(resolve => { window._memberAuthResolve = resolve; });
     }
 
