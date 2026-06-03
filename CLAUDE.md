@@ -87,7 +87,7 @@ manager/
 ### 버튼 스타일
 - 모든 버튼: **아웃라인** 스타일 (투명 배경 + 2px solid 테두리 + 색상 텍스트)
 - 호버 시 해당 색상의 연한 배경으로 채워짐
-- `.btn-ghost`: 연한 스타일 (`color: #9b9a97`, `border: 2px solid #c4c0ba`) — 보조 액션용
+- `.btn-ghost`: 연한 스타일 (`color: #9b9a97`, `border: 2px solid #c4c0ba`) — 보조 액션용. WCAG 대비 기준 미달이지만 관리자 전용 UI라 의도적으로 허용
 
 ### 탭 (admin.html)
 - 헤더 아래 `.sub-nav`로 분리된 언더라인 탭 (pill 탭 아님)
