@@ -121,8 +121,8 @@ body {
 .btn-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 9px 17px; }
 .btn-danger:hover:not(:disabled) { background: var(--danger-bg); }
 
-.btn-ghost { background: transparent; color: var(--text-secondary); border: 2px solid var(--text-secondary); padding: 9px 17px; }
-.btn-ghost:hover:not(:disabled) { background: var(--gray-bg); }
+.btn-ghost { background: transparent; color: #9b9a97; border: 2px solid #c4c0ba; padding: 9px 17px; }
+.btn-ghost:hover:not(:disabled) { background: var(--gray-bg); color: var(--text-secondary); }
 
 .btn-sm { padding: 5px 11px; font-size: 13px; min-height: 36px; }
 @media (pointer: coarse) { .btn { min-height: 44px; } .btn-sm { min-height: 44px; } .day-chip { min-height: 44px; padding: 10px; } }
