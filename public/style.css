@@ -5,7 +5,7 @@
   --primary-tint: rgba(79,70,229,.03);
   --success: #16a34a;
   --success-bg: #dcfce7;
-  --warning: #d97706;
+  --warning: #92400e;
   --warning-bg: #fef3c7;
   --danger: #dc2626;
   --danger-bg: #fee2e2;
@@ -110,13 +110,13 @@ body {
 
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 
-.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary { background: var(--primary); color: var(--white); }
 .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 
-.btn-success { background: var(--success); color: #fff; }
+.btn-success { background: var(--success); color: var(--white); }
 .btn-success:hover:not(:disabled) { background: #15803d; }
 
-.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger { background: var(--danger); color: var(--white); }
 .btn-danger:hover:not(:disabled) { background: #b91c1c; }
 
 .btn-ghost { background: transparent; color: var(--gray); border: 1px solid var(--border); }
@@ -235,7 +235,7 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   min-height: 44px;
 }
 
-.tab-btn.active { background: var(--primary); color: #fff; }
+.tab-btn.active { background: var(--primary); color: var(--white); }
 .tab-btn:hover:not(.active) { background: var(--gray-bg); }
 
 .tab-pane { display: none; }
@@ -256,7 +256,7 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   line-height: 1;
 }
 
-.badge-primary { background: var(--primary); color: #fff; }
+.badge-primary { background: var(--primary); color: var(--white); }
 .badge-success { background: var(--success-bg); color: var(--success); }
 .badge-warning { background: var(--warning-bg); color: var(--warning); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
@@ -489,7 +489,7 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   left: 50%;
   transform: translateX(-50%) translateY(100px);
   background: var(--toast-bg);
-  color: #fff;
+  color: var(--white);
   padding: 12px 24px;
   border-radius: 100px;
   font-size: 14px;
@@ -557,4 +557,11 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   .form-row > .btn { width: 100%; justify-content: center; align-self: auto; }
   .tabs { flex-direction: column; }
   input[type="date"].form-control { display: block !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

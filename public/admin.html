@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <style>
-    .admin-badge-pending { background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; }
+    .admin-badge-pending { background: var(--danger); color: var(--white); font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; font-family: inherit; }
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; justify-content: center; }
     .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 5px 10px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background-color .15s, color .15s; border: none; font-family: inherit; line-height: 1.5; }
@@ -29,7 +29,7 @@
   <!-- 로그인 오버레이 -->
   <div id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
     <div class="login-card">
-      <h2 id="loginTitle">🔒 관리자 로그인</h2>
+      <h2 id="loginTitle"><span aria-hidden="true">🔒</span> 관리자 로그인</h2>
       <p>열람실 출석 관리자 전용 페이지입니다.</p>
       <form id="loginForm">
         <input type="password" id="adminPassword" class="form-control" placeholder="비밀번호 입력" autocomplete="current-password" aria-label="비밀번호" style="margin-bottom:12px">
@@ -41,7 +41,7 @@
 
   <header class="page-header">
     <div class="page-header-inner">
-      <h1>📚 열람실 관리자 대시보드</h1>
+      <h1><span aria-hidden="true">📚</span> 열람실 관리자 대시보드</h1>
       <span style="margin-left:auto;font-size:13px;color:var(--text-secondary)" id="lastUpdated"></span>
     </div>
   </header>
@@ -49,17 +49,17 @@
   <div class="admin-container">
     <!-- Summary -->
     <div class="summary-grid" id="summaryCards">
-      <div class="summary-card"><div class="label">전체 사용자</div><div class="value" id="statTotal">-</div></div>
-      <div class="summary-card"><div class="label">대기 중인 신청</div><div class="value" id="statPending">-</div></div>
-      <div class="summary-card"><div class="label">위험 (3주 미달)</div><div class="value warning" id="statAtRisk">-</div></div>
-      <div class="summary-card"><div class="label">박탈 대상 (4주↑)</div><div class="value danger" id="statRevoke">-</div></div>
+      <div class="summary-card" role="group" aria-labelledby="label-total"><div class="label" id="label-total">전체 사용자</div><div class="value" id="statTotal">-</div></div>
+      <div class="summary-card" role="group" aria-labelledby="label-pending"><div class="label" id="label-pending">대기 중인 신청</div><div class="value" id="statPending">-</div></div>
+      <div class="summary-card" role="group" aria-labelledby="label-atrisk"><div class="label" id="label-atrisk">위험 (3주 미달)</div><div class="value warning" id="statAtRisk">-</div></div>
+      <div class="summary-card" role="group" aria-labelledby="label-revoke"><div class="label" id="label-revoke">박탈 대상 (4주↑)</div><div class="value danger" id="statRevoke">-</div></div>
     </div>
 
     <!-- Tabs -->
     <div class="tabs" role="tablist">
       <button class="tab-btn active" data-tab="pending" role="tab" aria-selected="true" aria-controls="tabPending" id="tab-btn-pending">
         대기 요청
-        <span class="admin-badge-pending" id="pendingBadge" style="display:none">0</span>
+        <span class="admin-badge-pending" id="pendingBadge" style="display:none" aria-label="대기 중 0건">0</span>
       </button>
       <button class="tab-btn" data-tab="attendance" role="tab" aria-selected="false" aria-controls="tabAttendance" id="tab-btn-attendance">출석 현황</button>
       <button class="tab-btn" data-tab="members" role="tab" aria-selected="false" aria-controls="tabMembers" id="tab-btn-members">사용자 관리</button>
@@ -283,6 +283,7 @@
         const badge = document.getElementById('pendingBadge');
         if (pending.length > 0) {
           badge.textContent = pending.length;
+          badge.setAttribute('aria-label', `대기 중 ${pending.length}건`);
           badge.style.display = 'inline';
         } else {
           badge.style.display = 'none';
