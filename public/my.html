@@ -191,11 +191,11 @@
           const weekCells = weeks.map(w => {
             const ws = member.weekStats.find(s => s.week === w.week);
             if (ws?.status === 'na')
-              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--gray)">-</span></div></td>`;
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--text-secondary)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--text-secondary)">-</span></div></td>`;
             if (ws?.status === 'exempted')
               return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--exempted)">-</span><span class="cell-badge" style="background:var(--exempted-bg);color:var(--exempted)">면제</span></div></td>`;
             if (!ws)
-              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--gray)">-</span></div></td>`;
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--text-secondary)">-</span></div></td>`;
             if (ws.status === 'ongoing' && ws.count === 0)
               return `<td><div class="cell-inner"><span class="cell-badge" style="background:var(--ongoing-bg);color:var(--ongoing)">진행중</span></div></td>`;
             const color = ws.status === 'recognized' ? 'var(--success)' : ws.status === 'unrecognized' ? 'var(--warning)' : 'var(--ongoing)';

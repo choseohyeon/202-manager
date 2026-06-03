@@ -10,7 +10,6 @@
   --warning-bg: #fef3c7;
   --danger: #dc2626;
   --danger-bg: #fee2e2;
-  --gray: #6b7280;
   --gray-bg: #f3f4f6;
   --border: #e5e7eb;
   --white: #ffffff;
@@ -122,7 +121,7 @@ body {
 .btn-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 9px 17px; }
 .btn-danger:hover:not(:disabled) { background: var(--danger-bg); }
 
-.btn-ghost { background: transparent; color: var(--gray); border: 2px solid var(--gray); padding: 9px 17px; }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 2px solid var(--text-secondary); padding: 9px 17px; }
 .btn-ghost:hover:not(:disabled) { background: var(--gray-bg); }
 
 .btn-sm { padding: 5px 11px; font-size: 13px; min-height: 36px; }
@@ -283,7 +282,7 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
 .badge-success { background: var(--success-bg); color: var(--success); }
 .badge-warning { background: var(--warning-bg); color: var(--warning); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
-.badge-gray { background: var(--gray-bg); color: var(--gray); }
+.badge-gray { background: var(--gray-bg); color: var(--text-secondary); }
 
 /* ── Summary Cards ──────────────────────── */
 
@@ -330,7 +329,7 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--gray);
+  color: var(--text-secondary);
   font-size: 40px;
 }
 
@@ -407,7 +406,7 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
 .status-recognized { background: var(--success-bg); color: var(--success); }
 .status-unrecognized { background: var(--warning-bg); color: var(--warning); }
 .status-ongoing { background: var(--ongoing-bg); color: var(--ongoing); }
-.status-empty { background: var(--gray-bg); color: var(--gray); }
+.status-empty { background: var(--gray-bg); color: var(--text-secondary); }
 .status-exempted { background: var(--exempted-bg); color: var(--exempted); }
 
 .member-name { font-weight: 700; }

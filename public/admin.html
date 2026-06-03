@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
-  <link rel="stylesheet" href="style.css?v=37">
+  <link rel="stylesheet" href="style.css?v=38">
   <style>
     .page-header { border-bottom: none; box-shadow: none; }
     .admin-badge-pending { background: var(--danger); color: var(--white); font-size: 11px; padding: 2px 7px; border-radius: 10px; }
@@ -401,13 +401,13 @@
               const weekCells = weeks.map(w => {
                 const ws = member.weekStats.find(s => s.week === w.week);
                 if (ws?.status === 'na') {
-                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span><span class="week-status status-empty">미해당</span></div></td>`;
+                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--text-secondary)">-</span><span class="week-status status-empty">미해당</span></div></td>`;
                 }
                 if (ws?.status === 'exempted') {
                   return `<td><div class="week-cell"><span class="week-count" style="color:var(--exempted)">-</span><span class="week-status status-exempted">면제</span></div></td>`;
                 }
                 if (!ws) {
-                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--gray)">-</span></div></td>`;
+                  return `<td><div class="week-cell"><span class="week-count" style="color:var(--text-secondary)">-</span></div></td>`;
                 }
                 if (ws.status === 'ongoing' && ws.count === 0) {
                   return `<td><div class="week-cell"><span class="week-status status-ongoing">진행중</span></div></td>`;
