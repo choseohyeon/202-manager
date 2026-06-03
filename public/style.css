@@ -217,6 +217,8 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   position: sticky;
   top: 56px;
   z-index: 99;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sub-nav-inner {
