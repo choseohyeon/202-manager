@@ -247,12 +247,13 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   content: '';
   position: absolute;
   bottom: -1px;
-  left: 0;
-  right: 0;
+  left: 16px;
+  right: 16px;
   height: 2px;
   background: transparent;
   transition: background .15s;
 }
+.tab-btn:first-child::after { left: 0; }
 
 .tab-btn.active { color: var(--primary); }
 .tab-btn.active::after { background: var(--primary); }
