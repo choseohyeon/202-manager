@@ -208,20 +208,15 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
 
 /* ── Tabs ──────────────────────────────── */
 
-.tabs {
+.header-nav {
   display: flex;
-  gap: 0;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
-  border-bottom: 2px solid var(--border);
-  margin-bottom: 24px;
+  align-self: stretch;
+  margin-left: 24px;
 }
 
 .tab-btn {
   flex: none;
-  padding: 12px 20px;
+  padding: 0 16px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -232,11 +227,10 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   transition: color .15s, border-color .15s;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  min-height: 44px;
+  align-self: stretch;
   border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  margin-bottom: -1px;
 }
 
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }

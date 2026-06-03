@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=26">
   <style>
     .admin-badge-pending { background: var(--danger); color: var(--white); font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; font-family: inherit; }
@@ -42,20 +42,19 @@
   <header class="page-header">
     <div class="page-header-inner">
       <h1>열람실 관리자 대시보드</h1>
+      <nav class="header-nav" role="tablist">
+        <button class="tab-btn active" data-tab="pending" role="tab" aria-selected="true" aria-controls="tabPending" id="tab-btn-pending">
+          대기 요청
+          <span class="admin-badge-pending" id="pendingBadge" style="display:none" aria-label="대기 중 0건">0</span>
+        </button>
+        <button class="tab-btn" data-tab="attendance" role="tab" aria-selected="false" aria-controls="tabAttendance" id="tab-btn-attendance">출석 현황</button>
+        <button class="tab-btn" data-tab="members" role="tab" aria-selected="false" aria-controls="tabMembers" id="tab-btn-members">사용자 관리</button>
+      </nav>
       <span style="margin-left:auto;font-size:13px;color:var(--text-secondary)" id="lastUpdated"></span>
     </div>
   </header>
 
   <div class="admin-container">
-    <!-- Tabs -->
-    <div class="tabs" role="tablist">
-      <button class="tab-btn active" data-tab="pending" role="tab" aria-selected="true" aria-controls="tabPending" id="tab-btn-pending">
-        대기 요청
-        <span class="admin-badge-pending" id="pendingBadge" style="display:none" aria-label="대기 중 0건">0</span>
-      </button>
-      <button class="tab-btn" data-tab="attendance" role="tab" aria-selected="false" aria-controls="tabAttendance" id="tab-btn-attendance">출석 현황</button>
-      <button class="tab-btn" data-tab="members" role="tab" aria-selected="false" aria-controls="tabMembers" id="tab-btn-members">사용자 관리</button>
-    </div>
 
     <!-- Tab: 대기 요청 -->
     <div class="tab-pane active" id="tabPending" role="tabpanel" aria-labelledby="tab-btn-pending">
