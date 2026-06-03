@@ -122,7 +122,7 @@ body {
 .btn-danger { background: transparent; color: var(--danger); border: 2px solid var(--danger); padding: 9px 17px; }
 .btn-danger:hover:not(:disabled) { background: var(--danger-bg); }
 
-.btn-ghost { background: transparent; color: var(--gray); border: 2px solid var(--border); padding: 9px 17px; }
+.btn-ghost { background: transparent; color: var(--gray); border: 2px solid var(--gray); padding: 9px 17px; }
 .btn-ghost:hover:not(:disabled) { background: var(--gray-bg); }
 
 .btn-sm { padding: 5px 11px; font-size: 13px; min-height: 36px; }
