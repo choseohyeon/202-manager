@@ -70,7 +70,7 @@ body {
 .page-header h1 {
   font-size: 17px;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--text);
 }
 
 .container {
