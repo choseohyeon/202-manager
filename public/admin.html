@@ -390,14 +390,6 @@
           <tbody>
             ${stats.map(member => {
               const rowClass = !member.is_active ? 'inactive-member' : member.shouldRevoke ? 'row-revoke' : member.isAtRisk ? 'row-at-risk' : '';
-              const statusBadge = !member.is_active
-                ? `<span class="badge badge-gray">비활성</span>`
-                : member.shouldRevoke
-                  ? `<span class="badge badge-danger">반납대상</span>`
-                  : member.isAtRisk
-                    ? `<span class="badge badge-warning">위험</span>`
-                    : `<span class="badge badge-success">정상</span>`;
-
               const weekCells = weeks.map(w => {
                 const ws = member.weekStats.find(s => s.week === w.week);
                 if (ws?.status === 'na') {
