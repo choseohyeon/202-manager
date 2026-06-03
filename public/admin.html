@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 대시보드</title>
-  <link rel="stylesheet" href="style.css?v=27">
+  <link rel="stylesheet" href="style.css?v=28">
   <style>
     .admin-badge-pending { background: var(--danger); color: var(--white); font-size: 11px; padding: 2px 7px; border-radius: 10px; }
     .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; font-family: inherit; }
@@ -60,7 +60,7 @@
     <div class="tab-pane active" id="tabPending" role="tabpanel" aria-labelledby="tab-btn-pending">
       <div class="section-header">
         <h2 class="section-title">승인 대기 중인 출석 신청</h2>
-        <button class="btn btn-ghost btn-sm" onclick="loadPending()" aria-label="새로고침">↻</button>
+        <button class="refresh-btn" onclick="loadPending()" aria-label="새로고침">↻</button>
       </div>
       <div id="pendingList"><div class="empty-state"><p>불러오는 중...</p></div></div>
     </div>
@@ -71,7 +71,7 @@
         <h2 class="section-title">주별 출석 현황</h2>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📥 Excel 다운로드</button>
-          <button class="btn btn-ghost btn-sm" onclick="loadStats()" aria-label="새로고침">↻</button>
+          <button class="refresh-btn" onclick="loadStats()" aria-label="새로고침">↻</button>
         </div>
       </div>
       <div id="statsContent"><div class="empty-state"><p>불러오는 중...</p></div></div>
@@ -81,7 +81,7 @@
     <div class="tab-pane" id="tabMembers" role="tabpanel" aria-labelledby="tab-btn-members">
       <div class="section-header">
         <h2 class="section-title">사용자 목록</h2>
-        <button class="btn btn-ghost btn-sm" onclick="loadMemberTable()" aria-label="새로고침">↻</button>
+        <button class="refresh-btn" onclick="loadMemberTable()" aria-label="새로고침">↻</button>
       </div>
       <div id="memberTableWrapper"></div>
 
@@ -124,7 +124,7 @@
 
       <div class="section-header mt-24">
         <h2 class="section-title">공휴일 관리</h2>
-        <button class="btn btn-ghost btn-sm" onclick="loadHolidays()" aria-label="새로고침">↻</button>
+        <button class="refresh-btn" onclick="loadHolidays()" aria-label="새로고침">↻</button>
       </div>
       <div class="card" style="margin-bottom:16px">
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">공휴일이 포함된 주는 출석 인정 기준 없이 자동으로 <span style="color:var(--exempted);font-weight:600">면제</span> 처리됩니다.</p>
