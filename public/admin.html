@@ -393,7 +393,7 @@
               const statusBadge = !member.is_active
                 ? `<span class="badge badge-gray">비활성</span>`
                 : member.shouldRevoke
-                  ? `<span class="badge badge-danger">박탈대상</span>`
+                  ? `<span class="badge badge-danger">반납대상</span>`
                   : member.isAtRisk
                     ? `<span class="badge badge-warning">위험</span>`
                     : `<span class="badge badge-success">정상</span>`;
@@ -445,7 +445,7 @@
             <table class="stats-table">${thead}${tbody}</table>
           </div>
           <p style="font-size:12px;color:var(--text-secondary);margin-top:12px">
-            * 인정 기준: 주 4일 이상 출석 / 미인정 4주 누적 시 자리 박탈
+            * 인정 기준: 주 4일 이상 출석 / 미인정 4주 누적 시 자리 반납
           </p>
         `;
       } catch (err) {
@@ -524,7 +524,7 @@
     }
 
     async function deactivateMember(id, name) {
-      if (!confirm(`${name}을(를) 비활성화 하시겠습니까?\n자리 박탈 처리 시 사용합니다.`)) return;
+      if (!confirm(`${name}을(를) 비활성화 하시겠습니까?\n자리 반납 처리 시 사용합니다.`)) return;
       try {
         const res = await authFetch(`/api/members/${id}`, {
           method: 'PUT',
