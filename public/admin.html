@@ -55,6 +55,7 @@
       </button>
       <button class="tab-btn" data-tab="attendance" role="tab" aria-selected="false" aria-controls="tabAttendance" id="tab-btn-attendance">출석 현황</button>
       <button class="tab-btn" data-tab="members" role="tab" aria-selected="false" aria-controls="tabMembers" id="tab-btn-members">사용자 관리</button>
+      <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false" aria-controls="tabSettings" id="tab-btn-settings">설정</button>
     </div>
   </nav>
 
@@ -142,7 +143,11 @@
       </div>
       <div id="holidayList"></div>
 
-      <div class="section-header mt-24">
+    </div>
+
+    <!-- Tab: 설정 -->
+    <div class="tab-pane" id="tabSettings" role="tabpanel" aria-labelledby="tab-btn-settings">
+      <div class="section-header">
         <h2 class="section-title">사용자 접근 비밀번호</h2>
       </div>
       <div class="card" style="margin-bottom:24px">
@@ -199,6 +204,7 @@
         if (btn.dataset.tab === 'pending') loadPending();
         if (btn.dataset.tab === 'attendance') loadStats();
         if (btn.dataset.tab === 'members') { loadMemberTable(); loadHolidays(); }
+        if (btn.dataset.tab === 'settings') loadMemberPasswordStatus();
       });
     });
 
