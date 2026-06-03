@@ -1,6 +1,7 @@
 :root {
   --primary: #4f46e5;
-  --primary-hover: #4338ca;
+  --primary-bg: #ede9fe;
+  --primary-hover: #ddd6fe;
   --primary-focus: rgba(79,70,229,.15);
   --primary-tint: rgba(79,70,229,.03);
   --success: #16a34a;
@@ -110,17 +111,17 @@ body {
 
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 
-.btn-primary { background: var(--primary); color: var(--white); }
+.btn-primary { background: var(--primary-bg); color: var(--primary); }
 .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 
-.btn-success { background: var(--success); color: var(--white); }
-.btn-success:hover:not(:disabled) { background: #15803d; }
+.btn-success { background: var(--success-bg); color: var(--success); }
+.btn-success:hover:not(:disabled) { background: #bbf7d0; }
 
-.btn-danger { background: var(--danger); color: var(--white); }
-.btn-danger:hover:not(:disabled) { background: #b91c1c; }
+.btn-danger { background: var(--danger-bg); color: var(--danger); }
+.btn-danger:hover:not(:disabled) { background: #fecaca; }
 
-.btn-ghost { background: transparent; color: var(--gray); border: 1px solid var(--border); }
-.btn-ghost:hover:not(:disabled) { background: var(--gray-bg); }
+.btn-ghost { background: var(--gray-bg); color: var(--gray); border: none; }
+.btn-ghost:hover:not(:disabled) { background: var(--border); }
 
 .btn-sm { padding: 6px 12px; font-size: 13px; min-height: 36px; }
 @media (pointer: coarse) { .btn { min-height: 44px; } .btn-sm { min-height: 44px; } .day-chip { min-height: 44px; padding: 10px; } }
