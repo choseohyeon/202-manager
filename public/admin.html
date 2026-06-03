@@ -47,14 +47,6 @@
   </header>
 
   <div class="admin-container">
-    <!-- Summary -->
-    <div class="summary-grid" id="summaryCards">
-      <div class="summary-card" role="group" aria-labelledby="label-total"><div class="label" id="label-total">전체 사용자</div><div class="value" id="statTotal">-</div></div>
-      <div class="summary-card" role="group" aria-labelledby="label-pending"><div class="label" id="label-pending">대기 중인 신청</div><div class="value" id="statPending">-</div></div>
-      <div class="summary-card" role="group" aria-labelledby="label-atrisk"><div class="label" id="label-atrisk">위험 (3주 미달)</div><div class="value warning" id="statAtRisk">-</div></div>
-      <div class="summary-card" role="group" aria-labelledby="label-revoke"><div class="label" id="label-revoke">박탈 대상 (4주↑)</div><div class="value danger" id="statRevoke">-</div></div>
-    </div>
-
     <!-- Tabs -->
     <div class="tabs" role="tablist">
       <button class="tab-btn active" data-tab="pending" role="tab" aria-selected="true" aria-controls="tabPending" id="tab-btn-pending">
@@ -267,18 +259,7 @@
     // ── Load Summary ──────────────────────────────────
     async function loadSummary() {
       try {
-        const [pendingRes, statsRes] = await Promise.all([
-          authFetch('/api/checkins?status=pending'),
-          authFetch('/api/stats')
-        ]);
-        const pending = await pendingRes.json();
-        const { stats } = await statsRes.json();
-
-        const activeMembers = stats.filter(s => s.is_active);
-        document.getElementById('statTotal').textContent = activeMembers.length;
-        document.getElementById('statPending').textContent = pending.length;
-        document.getElementById('statAtRisk').textContent = activeMembers.filter(s => s.isAtRisk).length;
-        document.getElementById('statRevoke').textContent = activeMembers.filter(s => s.shouldRevoke).length;
+        const pending = await authFetch('/api/checkins?status=pending').then(r => r.json());
 
         const badge = document.getElementById('pendingBadge');
         if (pending.length > 0) {
