@@ -210,15 +210,25 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
 
 /* ── Tabs ──────────────────────────────── */
 
-.header-nav {
+.sub-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  position: sticky;
+  top: 56px;
+  z-index: 99;
+}
+
+.sub-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  align-self: stretch;
-  margin-left: 24px;
 }
 
 .tab-btn {
   flex: none;
   padding: 0 16px;
+  height: 44px;
   border: none;
   border-radius: 0;
   background: transparent;
@@ -230,7 +240,6 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  align-self: stretch;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
