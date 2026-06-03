@@ -236,15 +236,26 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color .15s, border-color .15s;
+  transition: color .15s;
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  position: relative;
 }
 
-.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background .15s;
+}
+
+.tab-btn.active { color: var(--primary); }
+.tab-btn.active::after { background: var(--primary); }
 .tab-btn:hover:not(.active) { color: var(--text); }
 .tab-btn:first-child { padding-left: 0; }
 
