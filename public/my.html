@@ -68,7 +68,7 @@
     </div>
 
     <div id="content">
-      <div class="empty-state"><div class="icon">📊</div><p>불러오는 중...</p></div>
+      <div class="empty-state"><p>불러오는 중...</p></div>
     </div>
   </div>
 
@@ -223,7 +223,7 @@
           <p style="font-size:12px;color:var(--text-secondary);margin-top:12px">* 인정 기준: 주 4일 이상 출석</p>
         `;
       } catch (err) {
-        document.getElementById('content').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+        document.getElementById('content').innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`;
         console.error(err);
       }
     }

@@ -63,7 +63,7 @@
         <h2 class="section-title">승인 대기 중인 출석 신청</h2>
         <button class="btn btn-ghost btn-sm" onclick="loadPending()">새로고침</button>
       </div>
-      <div id="pendingList"><div class="empty-state"><div class="icon">⏳</div><p>불러오는 중...</p></div></div>
+      <div id="pendingList"><div class="empty-state"><p>불러오는 중...</p></div></div>
     </div>
 
     <!-- Tab: 출석 현황 -->
@@ -75,7 +75,7 @@
           <button class="btn btn-ghost btn-sm" onclick="loadStats()">새로고침</button>
         </div>
       </div>
-      <div id="statsContent"><div class="empty-state"><div class="icon">📊</div><p>불러오는 중...</p></div></div>
+      <div id="statsContent"><div class="empty-state"><p>불러오는 중...</p></div></div>
     </div>
 
     <!-- Tab: 사용자 관리 -->
@@ -284,7 +284,7 @@
         const items = await res.json();
 
         if (items.length === 0) {
-          container.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>대기 중인 신청이 없습니다.</p></div>`;
+          container.innerHTML = `<div class="empty-state"><p>대기 중인 신청이 없습니다.</p></div>`;
           return;
         }
 
@@ -311,7 +311,7 @@
           </div>
         `).join('')}</div>`;
       } catch {
-        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+        container.innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`;
       }
     }
 
@@ -361,7 +361,7 @@
         const { weeks, stats } = await res.json();
 
         if (stats.length === 0) {
-          container.innerHTML = `<div class="empty-state"><div class="icon">📊</div><p>등록된 사용자가 없습니다.</p></div>`;
+          container.innerHTML = `<div class="empty-state"><p>등록된 사용자가 없습니다.</p></div>`;
           return;
         }
 
@@ -443,7 +443,7 @@
           </p>
         `;
       } catch (err) {
-        container.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+        container.innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`;
         console.error(err);
       }
     }
@@ -467,7 +467,7 @@
         });
 
         if (members.length === 0) {
-          wrapper.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>등록된 사용자가 없습니다.</p></div>`;
+          wrapper.innerHTML = `<div class="empty-state"><p>등록된 사용자가 없습니다.</p></div>`;
           return;
         }
 
@@ -494,7 +494,7 @@
           </div>
         `;
       } catch {
-        wrapper.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>불러오기 실패</p></div>`;
+        wrapper.innerHTML = `<div class="empty-state"><p>불러오기 실패</p></div>`;
       }
     }
 
@@ -542,7 +542,7 @@
         const res = await fetch('/api/holidays');
         const holidays = await res.json();
         if (holidays.length === 0) {
-          container.innerHTML = `<div class="empty-state" style="padding:24px"><div class="icon" style="font-size:28px">📅</div><p>등록된 공휴일이 없습니다.</p></div>`;
+          container.innerHTML = `<div class="empty-state" style="padding:24px"><p>등록된 공휴일이 없습니다.</p></div>`;
           return;
         }
         container.innerHTML = `

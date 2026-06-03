@@ -330,7 +330,6 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator { padding: 0;
   color: var(--text-secondary);
 }
 
-.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 15px; }
 
 /* ── Stats Table ────────────────────────── */
