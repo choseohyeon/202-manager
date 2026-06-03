@@ -24,8 +24,8 @@
   /* 상태 색상 토큰 */
   --ongoing: #2563eb;
   --ongoing-bg: #dbeafe;
-  --exempted: #7c3aed;
-  --exempted-bg: #ede9fe;
+  --exempted: #4b5563;
+  --exempted-bg: #f1f0ef;
   --row-risk-bg: #fffbeb;
   --row-revoke-bg: #fff1f1;
   --row-hover: #fafafa;
