@@ -5,3 +5,4 @@ attendance.json
 .env.local
 .vercel
 .DS_Store
+.claude/
