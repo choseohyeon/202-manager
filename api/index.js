@@ -61,9 +61,8 @@ function getWeekStart(dateStr) {
 }
 
 function isWeekComplete(weekStart) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const next = new Date(weekStart + 'T00:00:00'); next.setDate(next.getDate() + 7);
-  return today >= next;
+  const d = new Date(weekStart + 'T00:00:00'); d.setDate(d.getDate() + 7);
+  return getTodayKR() >= d.toISOString().split('T')[0];
 }
 
 function formatWeekLabel(weekStart) {
