@@ -22,7 +22,7 @@ const upload = multer({
 async function savePhoto(file) {
   if (!file) return null;
   const ext = path.extname(file.originalname).toLowerCase();
-  const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}${ext}`;
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}${ext}`;
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     const { put } = require('@vercel/blob');
