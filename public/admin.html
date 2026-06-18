@@ -339,6 +339,7 @@
         document.getElementById(`card-${id}`)?.remove();
         showToast('삭제되었습니다.');
         loadSummary();
+        if (document.querySelectorAll('.pending-card').length === 0) loadPending();
       } catch { showToast('오류가 발생했습니다.', 'error'); }
     }
 

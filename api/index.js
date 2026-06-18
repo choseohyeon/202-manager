@@ -120,7 +120,7 @@ app.get('/api/checkins', requireAuth, async (req, res) => {
 });
 
 app.post('/api/checkins/:id/approve', requireAuth, async (req, res) => {
-  try { await db.updateCheckinStatus(parseInt(req.params.id), 'approved', req.body.note || null); res.json({ success: true }); }
+  try { await db.updateCheckinStatus(parseInt(req.params.id), 'approved', null); res.json({ success: true }); }
   catch (e) { res.status(404).json({ error: e.message }); }
 });
 
