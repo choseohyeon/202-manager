@@ -8,7 +8,7 @@
   <style>
     .page-header { border-bottom: none; box-shadow: none; }
     .admin-badge-pending { background: var(--danger); color: var(--white); font-size: 11px; padding: 2px 7px; border-radius: 10px; }
-    .note-input { width: 100%; margin-top: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; font-family: inherit; }
+
     .days-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; justify-content: center; }
     .day-chip { font-size: 11px; background: var(--success-bg); color: var(--success); padding: 5px 10px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background-color .15s, color .15s; border: none; font-family: inherit; line-height: 1.5; }
     .day-chip:hover { background: var(--danger-bg); color: var(--danger); }
@@ -307,10 +307,8 @@
               <div class="pending-card-meta">
                 ${item.seat_number}번 자리 · ${formatDate(item.checkin_date)} · ${timeAgo(item.created_at)}
               </div>
-              <textarea class="note-input" id="note-${item.id}" placeholder="거부 사유 (선택)" aria-label="거부 사유"></textarea>
               <div class="pending-card-actions mt-16">
                 <button class="btn btn-success btn-sm" onclick="approve(${item.id})">✓ 승인</button>
-                <button class="btn btn-danger btn-sm" onclick="reject(${item.id})">✗ 거부</button>
                 <button class="btn btn-ghost btn-sm" onclick="deleteCheckin(${item.id})">삭제</button>
               </div>
             </div>
@@ -322,28 +320,13 @@
     }
 
     async function approve(id) {
-      const note = document.getElementById(`note-${id}`)?.value || '';
       try {
         const res = await authFetch(`/api/checkins/${id}/approve`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
         });
         if (!res.ok) throw new Error();
         document.getElementById(`card-${id}`)?.remove();
         showToast('승인되었습니다.', 'success');
-        loadSummary();
-        if (document.querySelectorAll('.pending-card').length === 0) loadPending();
-      } catch { showToast('오류가 발생했습니다.', 'error'); }
-    }
-
-    async function reject(id) {
-      const note = document.getElementById(`note-${id}`)?.value || '';
-      try {
-        const res = await authFetch(`/api/checkins/${id}/reject`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note })
-        });
-        if (!res.ok) throw new Error();
-        document.getElementById(`card-${id}`)?.remove();
-        showToast('거부되었습니다.', 'error');
         loadSummary();
         if (document.querySelectorAll('.pending-card').length === 0) loadPending();
       } catch { showToast('오류가 발생했습니다.', 'error'); }

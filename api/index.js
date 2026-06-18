@@ -124,10 +124,6 @@ app.post('/api/checkins/:id/approve', requireAuth, async (req, res) => {
   catch (e) { res.status(404).json({ error: e.message }); }
 });
 
-app.post('/api/checkins/:id/reject', requireAuth, async (req, res) => {
-  try { await db.updateCheckinStatus(parseInt(req.params.id), 'rejected', req.body.note || null); res.json({ success: true }); }
-  catch (e) { res.status(404).json({ error: e.message }); }
-});
 
 app.delete('/api/checkins/:id', requireAuth, async (req, res) => {
   try { await db.deleteCheckin(parseInt(req.params.id)); res.json({ success: true }); }
