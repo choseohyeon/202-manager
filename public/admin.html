@@ -466,10 +466,10 @@
                 </div>
                 <div class="member-row-actions">
                   ${m.is_active
-                    ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, ${JSON.stringify(m.name)})">비활성화</button>`
+                    ? `<button class="btn btn-ghost btn-sm" onclick="deactivateMember(${m.id}, ${escapeHtml(JSON.stringify(m.name))})">비활성화</button>`
                     : `<button class="btn btn-success btn-sm" onclick="activateMember(${m.id})">활성화</button>`
                   }
-                  <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, ${JSON.stringify(m.name)})">삭제</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, ${escapeHtml(JSON.stringify(m.name))})">삭제</button>
                 </div>
               </div>
             `).join('')}
