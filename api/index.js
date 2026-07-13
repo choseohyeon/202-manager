@@ -158,6 +158,7 @@ app.get('/api/stats', requireMemberAuth, async (req, res) => {
     }
     const currentWeek = getWeekStart(getTodayKR());
     weekSet.add(currentWeek);
+    for (const h of holidays) weekSet.add(getWeekStart(h.date));
     const sortedWeeks = Array.from(weekSet).sort();
 
     const stats = members.map(member => {
