@@ -191,7 +191,7 @@
           const weekCells = weeks.map(w => {
             const ws = member.weekStats.find(s => s.week === w.week);
             if (ws?.status === 'na')
-              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--text-secondary)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--text-secondary)">-</span></div></td>`;
+              return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--text-secondary)">-</span><span class="cell-badge" style="background:var(--gray-bg);color:var(--text-secondary)">미해당</span></div></td>`;
             if (ws?.status === 'exempted')
               return `<td><div class="cell-inner"><span class="cell-count" style="color:var(--exempted)">-</span><span class="cell-badge" style="background:var(--exempted-bg);color:var(--exempted)">면제</span></div></td>`;
             if (!ws)
